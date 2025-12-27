@@ -4,7 +4,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from core.docs.healthcheck import healthcheck_docs
+from core.docs import healthcheck_docs
 
 class HealthCheckView(APIView):
     """
