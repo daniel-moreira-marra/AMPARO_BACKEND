@@ -8,6 +8,7 @@ class UserRole(models.TextChoices):
     GUARDIAN = "GUARDIAN", "Responsável"
     CAREGIVER = "CAREGIVER", "Cuidador"
     INSTITUTION = "INSTITUTION", "Instituição"
+    PROFESSIONAL = "PROFESSIONAL", "Profissional de saúde" 
 
 class UserManager(BaseUserManager):
     """
