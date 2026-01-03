@@ -35,16 +35,6 @@ class GuardianProfile(models.Model):
     is_legal_guardian = models.BooleanField("responsável legal", default=False)
     preferred_contact = models.CharField("forma de contato preferida", max_length=30, blank=True)
 
-    # Vínculo com idosos (quando ElderProfile existir, ajuste para apontar para o modelo do idoso)
-    # Se seu idoso é o User com role=ELDER + ElderProfile, você pode apontar para ElderProfile:
-    elders = models.ManyToManyField(
-        "accounts.ElderProfile",
-        through="accounts.GuardianElderLink",
-        related_name="guardians",
-        blank=True,
-    )
-
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

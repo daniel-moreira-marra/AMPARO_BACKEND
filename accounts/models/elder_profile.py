@@ -53,13 +53,6 @@ class ElderProfile(models.Model):
         default=CognitiveStatus.NOT_INFORMED,
     )
 
-    guardians = models.ManyToManyField(
-        "accounts.GuardianProfile",
-        through="accounts.GuardianElderLink",
-        related_name="elders",
-        blank=True,
-    )
-
 
 
     has_fall_risk = models.BooleanField("risco de quedas", default=False)
@@ -79,6 +72,36 @@ class ElderProfile(models.Model):
 
     created_at = models.DateTimeField("criado em", auto_now_add=True)
     updated_at = models.DateTimeField("atualizado em", auto_now=True)
+
+    # Relaçoes externas
+    guardians = models.ManyToManyField(
+        "accounts.GuardianProfile",
+        through="accounts.GuardianElderLink",
+        related_name="elders",
+        blank=True,
+    )
+
+    institutions = models.ManyToManyField(
+        "accounts.InstitutionProfile",
+        through="accounts.InstitutionElderLink",
+        related_name="elders",
+        blank=True,
+    )
+
+    caregivers = models.ManyToManyField(
+        "accounts.CaregiverProfile",
+        through="accounts.CaregiverElderLink",
+        related_name="elders",
+        blank=True,
+    )
+    
+    professionals = models.ManyToManyField(
+        "accounts.ProfessionalProfile",
+        through="accounts.ProfessionalElderLink",
+        related_name="elders",
+        blank=True,
+    )
+
 
     def __str__(self) -> str:
         return f"Idoso: {self.user.email}"

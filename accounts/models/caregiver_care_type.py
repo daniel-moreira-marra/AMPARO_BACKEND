@@ -1,14 +1,7 @@
 from django.db import models
 
 from accounts.models.caregiver_profile import CaregiverProfile
-
-class CareType(models.TextChoices):
-    HOME = "HOME", "Domiciliar"
-    HOSPITAL = "HOSPITAL", "Hospitalar"
-    NIGHT_SHIFT = "NIGHT_SHIFT", "Plantão noturno"
-    DAY_SHIFT = "DAY_SHIFT", "Plantão diurno"
-    COMPANION = "COMPANION", "Acompanhante"
-
+from .enums import CareType
 
 class CaregiverCareType(models.Model):
     """

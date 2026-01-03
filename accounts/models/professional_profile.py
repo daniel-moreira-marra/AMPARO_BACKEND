@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 
+from .enums import ServiceMode
 
 class ProfessionalProfile(models.Model):
     """
@@ -13,12 +14,6 @@ class ProfessionalProfile(models.Model):
         OCCUPATIONAL_THERAPIST = "OCCUPATIONAL_THERAPIST", "Terapeuta ocupacional"
         PSYCHOLOGIST = "PSYCHOLOGIST", "Psicólogo(a)"
         NUTRITIONIST = "NUTRITIONIST", "Nutricionista"
-        OTHER = "OTHER", "Outro"
-
-    class ServiceMode(models.TextChoices):
-        HOME = "HOME", "Domiciliar"
-        CLINIC = "CLINIC", "Em clínica"
-        ONLINE = "ONLINE", "Online"
         OTHER = "OTHER", "Outro"
 
     user = models.OneToOneField(
