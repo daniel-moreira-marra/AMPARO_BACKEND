@@ -37,5 +37,7 @@ urlpatterns = [
     # Local apps
     path('api/v1/', include('core.urls.urls')),
     path("api/v1/auth/", include("accounts.urls.urls")),
+    path("api/v1/elders/", include("accounts.urls.urls_elders")),
+    path("api/v1/caregivers/", include("accounts.urls.urls_caregivers")),
 
 ]

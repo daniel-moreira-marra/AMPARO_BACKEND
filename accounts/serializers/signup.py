@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model, password_validation
 from django.db import transaction
 from rest_framework import serializers
 
-from accounts.models import UserRole, ElderProfile  # ajuste se seu import estiver diferente
+from ..models import UserRole, ElderProfile, CaregiverProfile, GuardianProfile, InstitutionProfile, ProfessionalProfile  # ajuste se seu import estiver diferente
 
 User = get_user_model()
 
@@ -42,6 +42,16 @@ class SignupSerializer(serializers.Serializer):
         # Por enquanto, só existe o profile de idoso
         if getattr(user, "role", None) == "ELDER":
             ElderProfile.objects.create(user=user)
+        elif getattr(user, "role", None) == "CAREGIVER":
+            CaregiverProfile.objects.create(user=user)
+        elif getattr(user, "role", None) == "GUARDIAN":
+            GuardianProfile.objects.create(user=user)
+        elif getattr(user, "role", None) == "INSTITUTION":
+            InstitutionProfile.objects.create(user=user)
+        elif getattr(user, "role", None) == "PROFESSIONAL":
+            ProfessionalProfile.objects.create(user=user)
+        elif getattr(user, "role", None) is None:
+            raise serializers.ValidationError("O campo 'role' é obrigatório.")
 
         return user
 
