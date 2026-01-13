@@ -5,59 +5,59 @@ from rest_framework.views import APIView
 
 from core.exceptions.handlers import deny_role
 
-from ..models import CaregiverProfile
-from ..serializers import CaregiverMeSerializer
+from ..models import InstitutionProfile
+from ..serializers import InstitutionMeSerializer
 from ..docs import (
-    caregiver_me_get_docs,
-    caregiver_me_patch_docs,
-    caregiver_me_put_docs,
+    institution_me_get_docs,
+    institution_me_patch_docs,
+    institution_me_put_docs,
 )
 
 
-class CaregiverMeView(APIView):
+class InstitutionMeView(APIView):
     """
-    Permite que o próprio usuário com role=CAREGIVER consulte/atualize seu CaregiverProfile.
+    Permite que o próprio usuário com role=INSTITUTION consulte/atualize seu InstitutionProfile.
     """
     permission_classes = [IsAuthenticated]
 
-    def _ensure_role(self, user) -> Response | None:
-        if getattr(user, "role", None) != "CAREGIVER":
-            deny_role("CAREGIVER")
+    def _ensure_role(self, user):
+        if getattr(user, "role", None) != "INSTITUTION":
+            deny_role("INSTITUTION")
         return None
 
     def _get_profile(self, user):
-        profile, _ = CaregiverProfile.objects.get_or_create(user=user)
+        profile, _ = InstitutionProfile.objects.get_or_create(user=user)
         return profile
 
-    @caregiver_me_get_docs()
+    @institution_me_get_docs()
     def get(self, request):
         forbidden = self._ensure_role(request.user)
         if forbidden:
             return forbidden
 
         profile = self._get_profile(request.user)
-        return Response(CaregiverMeSerializer(profile).data, status=status.HTTP_200_OK)
+        return Response(InstitutionMeSerializer(profile).data, status=status.HTTP_200_OK)
 
-    @caregiver_me_patch_docs()
+    @institution_me_patch_docs()
     def patch(self, request):
         forbidden = self._ensure_role(request.user)
         if forbidden:
             return forbidden
 
         profile = self._get_profile(request.user)
-        serializer = CaregiverMeSerializer(profile, data=request.data, partial=True)
+        serializer = InstitutionMeSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @caregiver_me_put_docs()
+    @institution_me_put_docs()
     def put(self, request):
         forbidden = self._ensure_role(request.user)
         if forbidden:
             return forbidden
 
         profile = self._get_profile(request.user)
-        serializer = CaregiverMeSerializer(profile, data=request.data, partial=False)
+        serializer = InstitutionMeSerializer(profile, data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)

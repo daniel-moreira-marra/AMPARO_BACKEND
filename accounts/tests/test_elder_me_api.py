@@ -6,6 +6,7 @@ from accounts.models import ElderProfile
 def test_elder_me_requires_auth(api_client):
     resp = api_client.get("/api/v1/elders/me/")
     assert resp.status_code == 401
+    assert resp.json()["error"]["code"] == "NOT_AUTHENTICATED"
 
 
 @pytest.mark.django_db
@@ -13,6 +14,7 @@ def test_elder_me_forbids_non_elder(auth_client):
     client = auth_client(role="CAREGIVER", email="caregiver@example.com")
     resp = client.get("/api/v1/elders/me/")
     assert resp.status_code == 403
+    assert resp.json()["error"]["code"] == "PERMISSION_DENIED"
 
 
 @pytest.mark.django_db
