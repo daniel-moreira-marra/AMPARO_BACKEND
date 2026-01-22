@@ -20,9 +20,9 @@ def test_login_by_email_and_me():
         format="json",
     )
     assert token_resp.status_code == 200
-    access = token_resp.json()["access"]
+    access = token_resp.json()["data"]["access"]
 
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
     me_resp = client.get("/api/v1/auth/me/")
     assert me_resp.status_code == 200
-    assert me_resp.json()["email"] == "euler@example.com"
+    assert me_resp.json()["data"]["email"] == "euler@example.com"

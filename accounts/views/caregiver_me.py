@@ -3,7 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.exceptions.handlers import deny_role
+from core.exceptions.helpers import deny_role
+from core.exceptions.responses import success_response
 
 from ..models import CaregiverProfile
 from ..serializers import CaregiverMeSerializer
@@ -36,7 +37,10 @@ class CaregiverMeView(APIView):
             return forbidden
 
         profile = self._get_profile(request.user)
-        return Response(CaregiverMeSerializer(profile).data, status=status.HTTP_200_OK)
+        return success_response(
+            data=CaregiverMeSerializer(profile).data,
+            status_code=status.HTTP_200_OK,
+        )
 
     @caregiver_me_patch_docs()
     def patch(self, request):
@@ -48,7 +52,7 @@ class CaregiverMeView(APIView):
         serializer = CaregiverMeSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(data=serializer.data, status_code=status.HTTP_200_OK)
 
     @caregiver_me_put_docs()
     def put(self, request):
@@ -60,4 +64,4 @@ class CaregiverMeView(APIView):
         serializer = CaregiverMeSerializer(profile, data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(data=serializer.data, status_code=status.HTTP_200_OK)

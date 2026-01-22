@@ -1,9 +1,9 @@
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.exceptions.handlers import deny_role
+from core.exceptions.helpers import deny_role
+from core.exceptions.responses import success_response
 
 from ..models import InstitutionProfile
 from ..serializers import InstitutionMeSerializer
@@ -36,7 +36,10 @@ class InstitutionMeView(APIView):
             return forbidden
 
         profile = self._get_profile(request.user)
-        return Response(InstitutionMeSerializer(profile).data, status=status.HTTP_200_OK)
+        return success_response(
+            data=InstitutionMeSerializer(profile).data,
+            status_code=status.HTTP_200_OK,
+        )
 
     @institution_me_patch_docs()
     def patch(self, request):
@@ -48,7 +51,7 @@ class InstitutionMeView(APIView):
         serializer = InstitutionMeSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(data=serializer.data, status_code=status.HTTP_200_OK)
 
     @institution_me_put_docs()
     def put(self, request):
@@ -60,4 +63,4 @@ class InstitutionMeView(APIView):
         serializer = InstitutionMeSerializer(profile, data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(data=serializer.data, status_code=status.HTTP_200_OK)

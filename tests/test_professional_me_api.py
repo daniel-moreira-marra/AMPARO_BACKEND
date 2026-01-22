@@ -32,7 +32,7 @@ def test_professional_me_get_creates_profile(auth_client):
 
     assert ProfessionalProfile.objects.filter(user__email="prof1@example.com").count() == 1
 
-    body = resp.json()
+    body = resp.json()["data"]
     # Campos mínimos esperados no response (ajuste conforme seu serializer)
     assert "profession" in body
     assert "city" in body
@@ -57,7 +57,7 @@ def test_professional_me_patch_updates_fields(auth_client):
         format="json",
     )
     assert patch_resp.status_code == 200
-    body = patch_resp.json()
+    body = patch_resp.json()["data"]
     assert body["bio"] == "Fisioterapeuta com foco em reabilitação."
     assert body["city"] == "São Paulo"
     assert body["state"] == "SP"

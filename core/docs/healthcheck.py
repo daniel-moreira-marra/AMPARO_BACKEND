@@ -32,13 +32,20 @@ def healthcheck_docs():
                 response={
                     "type": "object",
                     "properties": {
-                        "status": {"type": "string", "example": "ok"},
-                        "message": {
-                            "type": "string",
-                            "example": "API de rede de cuidados ativa",
+                        "success": {"type": "boolean", "example": True},
+                        "data": {
+                            "type": "object",
+                            "properties": {
+                                "status": {"type": "string", "example": "ok"},
+                                "message": {
+                                    "type": "string",
+                                    "example": "API de rede de cuidados ativa",
+                                },
+                            },
+                            "required": ["status", "message"],
                         },
                     },
-                    "required": ["status", "message"],
+                    "required": ["success", "data"],
                 },
             )
         },

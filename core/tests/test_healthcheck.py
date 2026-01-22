@@ -13,4 +13,7 @@ def test_health_check_returns_ok():
     response = client.get(url)
 
     assert response.status_code == 200
-    assert response.json() == {"status": "ok", "message": "API de rede de cuidados ativa"}
+    assert response.json() == {
+        "success": True,
+        "data": {"status": "ok", "message": "API de rede de cuidados ativa"},
+    }

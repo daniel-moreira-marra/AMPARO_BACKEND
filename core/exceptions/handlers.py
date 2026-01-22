@@ -1,35 +1,19 @@
 from rest_framework.views import exception_handler
-from rest_framework.exceptions import (
-    ParseError,
-    ValidationError,
-    PermissionDenied,
-    NotAuthenticated,
-)
+from rest_framework.exceptions import APIException, ParseError
 from rest_framework import status
 
 from .responses import error_response
 from .codes import ErrorCode
-
-def deny_role(required_role: str):
-    """
-    Lança PermissionDenied com mensagem padronizada
-    para uso quando o usuário não tem o role esperado.
-    """
-    raise PermissionDenied(
-        f"Apenas usuários do tipo {required_role} podem acessar este endpoint."
-    )
-
-
+from .helpers import _stringify_error_detail
 
 def custom_exception_handler(exc, context):
-    """
-    Handler global de exceções da API.
-    Intercepta erros do DRF e padroniza o formato de resposta.
-    """
-    # Primeiro deixa o DRF processar
+    # print("EXC TYPE:", type(exc))
+    # print("EXC REPR:", repr(exc))
+    # print("EXC DETAIL:", getattr(exc, "detail", None))
+
     response = exception_handler(exc, context)
 
-    # JSON malformado
+    # JSON malformado (mensagem amigável)
     if isinstance(exc, ParseError):
         return error_response(
             code=ErrorCode.INVALID_JSON,
@@ -37,37 +21,41 @@ def custom_exception_handler(exc, context):
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
-    # Erros de validação (serializers)
-    if isinstance(exc, ValidationError):
+    # Qualquer exceção do DRF (preserva status code)
+    if isinstance(exc, APIException):
+        if exc.status_code == 400:
+            code = ErrorCode.VALIDATION_ERROR
+            details = exc.detail
+            message = "Erro de validação nos dados enviados."
+        elif exc.status_code == 401:
+            code = ErrorCode.NOT_AUTHENTICATED
+            details = None
+            message = _stringify_error_detail(getattr(exc, "detail", "Autenticação necessária."))
+        elif exc.status_code == 403:
+            code = ErrorCode.PERMISSION_DENIED
+            details = None
+            message = str(getattr(exc, "detail", "Sem permissão."))
+        elif exc.status_code == 404:
+            code = ErrorCode.NOT_FOUND
+            details = None
+            message = str(getattr(exc, "detail", "Recurso não encontrado."))
+        else:
+            code = ErrorCode.SERVER_ERROR
+            details = None
+            message = str(getattr(exc, "detail", "Erro na requisição."))
+
         return error_response(
-            code=ErrorCode.VALIDATION_ERROR,
-            message="Erro de validação nos dados enviados.",
-            details=exc.detail,
-            status_code=status.HTTP_400_BAD_REQUEST,
+            code=code,
+            message=message,
+            details=details,
+            status_code=exc.status_code,
         )
 
-    # Não autenticado
-    if isinstance(exc, NotAuthenticated):
-        return error_response(
-            code=ErrorCode.NOT_AUTHENTICATED,
-            message="Autenticação necessária para acessar este recurso.",
-            status_code=status.HTTP_401_UNAUTHORIZED,
-        )
-
-    # Sem permissão
-    if isinstance(exc, PermissionDenied):
-        return error_response(
-            code=ErrorCode.PERMISSION_DENIED,
-            message=str(exc.detail),  # preserva a mensagem do deny_role
-            status_code=status.HTTP_403_FORBIDDEN,
-        )
-
-
-    # Se o DRF já gerou uma resposta, apenas retorna
+    # Se DRF já gerou resposta (ex.: Http404 convertido), retorna
     if response is not None:
         return response
 
-    # Erro inesperado (500)
+    # fallback 500
     return error_response(
         code=ErrorCode.SERVER_ERROR,
         message="Erro interno do servidor.",

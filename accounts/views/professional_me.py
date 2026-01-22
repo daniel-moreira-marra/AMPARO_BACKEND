@@ -1,9 +1,9 @@
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.exceptions.handlers import deny_role
+from core.exceptions.helpers import deny_role
+from core.exceptions.responses import success_response
 
 from ..models import ProfessionalProfile
 from ..serializers.professional_me import ProfessionalMeSerializer
@@ -33,9 +33,9 @@ class ProfessionalMeView(APIView):
             return forbidden
 
         profile = self._get_profile(request.user)
-        return Response(
-            ProfessionalMeSerializer(profile).data,
-            status=status.HTTP_200_OK,
+        return success_response(
+            data=ProfessionalMeSerializer(profile).data,
+            status_code=status.HTTP_200_OK,
         )
 
     @professional_me_patch_docs()
@@ -48,7 +48,7 @@ class ProfessionalMeView(APIView):
         serializer = ProfessionalMeSerializer(profile, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(data=serializer.data, status_code=status.HTTP_200_OK)
 
     @professional_me_put_docs()
     def put(self, request):
@@ -60,4 +60,4 @@ class ProfessionalMeView(APIView):
         serializer = ProfessionalMeSerializer(profile, data=request.data, partial=False)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return success_response(data=serializer.data, status_code=status.HTTP_200_OK)

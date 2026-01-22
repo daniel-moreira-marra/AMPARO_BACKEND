@@ -32,7 +32,7 @@ def test_guardian_elder_link_create_success(auth_client, create_user):
     resp = client.post(route_under_test, payload, format="json")
     assert resp.status_code == 201, resp.content
 
-    body = resp.json()
+    body = resp.json()["data"]
     assert body["guardian"] == guardian_profile.id
     assert body["elder"] == elder_profile.id
     assert body["relationship"] == "CHILD"

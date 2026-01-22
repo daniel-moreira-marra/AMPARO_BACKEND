@@ -27,7 +27,7 @@ def test_caregiver_me_get_returns_profile_and_care_types(auth_client):
     resp = client.get("/api/v1/caregivers/me/")
     assert resp.status_code == 200
 
-    body = resp.json()
+    body = resp.json()["data"]
     assert "care_types" in body
     assert isinstance(body["care_types"], list)
 
@@ -48,7 +48,7 @@ def test_caregiver_me_patch_updates_profile_fields(auth_client):
         format="json",
     )
     assert patch_resp.status_code == 200
-    body = patch_resp.json()
+    body = patch_resp.json()["data"]
     assert body["bio"] == "Cuidador com 3 anos de experiência."
     assert body["city"] == "São Paulo"
     assert body["state"] == "SP"
@@ -74,7 +74,7 @@ def test_caregiver_me_patch_syncs_care_types(auth_client):
         format="json",
     )
     assert resp1.status_code == 200
-    assert set(resp1.json()["care_types"]) == {CareType.HOME, CareType.HOSPITAL}
+    assert set(resp1.json()["data"]["care_types"]) == {CareType.HOME, CareType.HOSPITAL}
 
     assert set(
         CaregiverCareType.objects.filter(caregiver=profile).values_list("care_type", flat=True)
@@ -87,7 +87,7 @@ def test_caregiver_me_patch_syncs_care_types(auth_client):
         format="json",
     )
     assert resp2.status_code == 200
-    assert set(resp2.json()["care_types"]) == {CareType.HOME, CareType.NIGHT_SHIFT}
+    assert set(resp2.json()["data"]["care_types"]) == {CareType.HOME, CareType.NIGHT_SHIFT}
 
     assert set(
         CaregiverCareType.objects.filter(caregiver=profile).values_list("care_type", flat=True)
@@ -114,7 +114,7 @@ def test_caregiver_me_put_replaces_profile(auth_client):
         format="json",
     )
     assert put_resp.status_code == 200
-    body = put_resp.json()
+    body = put_resp.json()["data"]
 
     assert body["bio"] == "Cuidador disponível para plantões."
     assert body["experience_years"] == 5

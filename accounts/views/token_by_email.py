@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
 from drf_spectacular.utils import extend_schema
 
 from ..serializers import TokenByEmailSerializer
+from core.exceptions.responses import success_response
 
 from ..docs import token_by_email_docs
 
@@ -15,5 +15,4 @@ class TokenByEmailView(APIView):
     def post(self, request):
         serializer = TokenByEmailSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data)
-
+        return success_response(data=serializer.validated_data)

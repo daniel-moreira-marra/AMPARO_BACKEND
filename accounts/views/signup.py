@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from ..docs import signup_docs
 from ..serializers import SignupSerializer, SignupResponseSerializer
+from core.exceptions.responses import success_response
 
 
 class SignupView(APIView):
@@ -16,4 +16,7 @@ class SignupView(APIView):
         serializer.is_valid(raise_exception=True)
 
         user = serializer.save()
-        return Response(SignupResponseSerializer(user).data, status=status.HTTP_201_CREATED)
+        return success_response(
+            data=SignupResponseSerializer(user).data,
+            status_code=status.HTTP_201_CREATED,
+        )

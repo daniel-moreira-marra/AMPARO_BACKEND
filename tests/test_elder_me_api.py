@@ -25,7 +25,7 @@ def test_elder_me_get_returns_profile(auth_client):
     resp = client.get("/api/v1/elders/me/")
     assert resp.status_code == 200
 
-    body = resp.json()
+    body = resp.json()["data"]
     assert "birth_date" in body
     assert "medical_notes" in body
 
@@ -46,7 +46,7 @@ def test_elder_me_patch_updates_fields(auth_client):
         format="json",
     )
     assert patch_resp.status_code == 200
-    assert patch_resp.json()["medical_notes"] == "Precisa de auxílio para medicação."
+    assert patch_resp.json()["data"]["medical_notes"] == "Precisa de auxílio para medicação."
 
     profile = ElderProfile.objects.get(user__email="elder2@example.com")
     assert profile.medical_notes == "Precisa de auxílio para medicação."
@@ -68,7 +68,7 @@ def test_elder_me_put_replaces_profile(auth_client):
         format="json",
     )
     assert put_resp.status_code == 200
-    body = put_resp.json()
+    body = put_resp.json()["data"]
     assert body["birth_date"] == "1950-01-01"
     assert body["medical_notes"] == "Histórico: hipertensão."
 
