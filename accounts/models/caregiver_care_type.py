@@ -1,7 +1,7 @@
 from django.db import models
 
 from accounts.models.caregiver_profile import CaregiverProfile
-from .enums import CareType
+from ..enums import CareType
 
 class CaregiverCareType(models.Model):
     """

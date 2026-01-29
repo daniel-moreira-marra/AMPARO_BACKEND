@@ -13,3 +13,10 @@ class ServiceMode(models.TextChoices):
     CLINIC = "CLINIC", "Em clínica"
     ONLINE = "ONLINE", "Online"
     OTHER = "OTHER", "Outro"
+
+class UserRole(models.TextChoices):
+    ELDER = "ELDER", "Idoso"
+    GUARDIAN = "GUARDIAN", "Responsável"
+    CAREGIVER = "CAREGIVER", "Cuidador"
+    INSTITUTION = "INSTITUTION", "Instituição"
+    PROFESSIONAL = "PROFESSIONAL", "Profissional de saúde" 

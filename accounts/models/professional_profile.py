@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.db import models
 
-from .enums import ServiceMode
+from ..enums.enums import ServiceMode
 
 class ProfessionalProfile(models.Model):
     """

@@ -1,14 +1,8 @@
 from django.db import models
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from ..enums import UserRole
 
-
-class UserRole(models.TextChoices):
-    ELDER = "ELDER", "Idoso"
-    GUARDIAN = "GUARDIAN", "Responsável"
-    CAREGIVER = "CAREGIVER", "Cuidador"
-    INSTITUTION = "INSTITUTION", "Instituição"
-    PROFESSIONAL = "PROFESSIONAL", "Profissional de saúde" 
 
 class UserManager(BaseUserManager):
     """

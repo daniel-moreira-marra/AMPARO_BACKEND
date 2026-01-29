@@ -1,4 +1,4 @@
-from .enums import CareType, ServiceMode
+from ..enums.enums import CareType, ServiceMode
 from .user import User, UserRole
 from .elder_profile import ElderProfile
 from .guardian_profile import GuardianProfile

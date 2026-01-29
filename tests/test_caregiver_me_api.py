@@ -1,7 +1,7 @@
 import pytest
 
 from accounts.models import CaregiverProfile, CaregiverCareType
-from accounts.models.enums import CareType
+from accounts.enums.enums import CareType
 
 
 @pytest.mark.django_db

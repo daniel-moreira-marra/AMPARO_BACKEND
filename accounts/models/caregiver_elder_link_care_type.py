@@ -1,5 +1,5 @@
 from django.db import models
-from .enums import CareType
+from ..enums.enums import CareType
 
 
 class CaregiverElderLinkCareType(models.Model):

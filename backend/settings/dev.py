@@ -1,4 +1,5 @@
 from .base import *  # noqa
+from datetime import timedelta
 
 DEBUG = True
 
@@ -24,3 +25,12 @@ DATABASES = {
         "PORT": os.getenv("LOCAL_POSTGRES_PORT"),
     }
 }
+
+SIMPLE_JWT = {
+        "ACCESS_TOKEN_LIFETIME": timedelta(days=365 * 10),  # 10 anos 😄
+        "REFRESH_TOKEN_LIFETIME": timedelta(days=365 * 10),
+        "ROTATE_REFRESH_TOKENS": False,
+        "BLACKLIST_AFTER_ROTATION": False,
+}
+
+

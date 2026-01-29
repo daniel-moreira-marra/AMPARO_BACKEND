@@ -45,5 +45,6 @@ urlpatterns = [
 
     # path("api/v1/posts/", include("posts.urls.urls_posts")),
     path("api/v1/posts/", include("posts.urls.urls_my_posts")),
+    path("api/v1/posts/", include("posts.urls.urls_feed")),
 
 ]

@@ -2,7 +2,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from ..models import CaregiverProfile, CaregiverCareType
-from ..models.enums import CareType
+from ..enums import CareType
 
 
 class CaregiverMeSerializer(serializers.ModelSerializer):
