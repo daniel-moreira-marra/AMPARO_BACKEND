@@ -1,6 +1,9 @@
 from rest_framework import generics, permissions
 from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
+from django.core.cache import cache
+
+from core.cache import generate_feed_cache_key
 
 from ..selectors.feed import get_feed_queryset
 from ..serializers import FeedPostSerializer
@@ -42,4 +45,30 @@ class FeedListView(FeedPaginationMixin, generics.ListAPIView):
 
     @schema_feed_list()
     def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        return self.list(request, *args, **kwargs)
+
+    def list(self, request, *args, **kwargs):
+        # 1. Obter parâmetros para a chave
+        cursor = request.query_params.get("cursor")
+        # Se houver filtros no futuro, eles devem entrar aqui
+        extra_params = {} 
+
+        # 2. Gerar chave de cache
+        cache_key = generate_feed_cache_key(request.user, cursor, extra_params)
+
+        # 3. Tentar obter do cache
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            # Adicionar um header para identificar cache hit se desejar
+            return Response(cached_data, headers={"X-Cache": "HIT"})
+
+        # 4. Se não estiver no cache, executa o fluxo normal
+        response = super().list(request, *args, **kwargs)
+
+        # 5. Salvar no cache (apenas se for 200 OK)
+        if response.status_code == 200:
+            # TTL de 60 segundos como solicitado
+            cache.set(cache_key, response.data, timeout=60)
+            response["X-Cache"] = "MISS"
+
+        return response

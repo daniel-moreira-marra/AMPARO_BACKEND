@@ -55,29 +55,6 @@ class PostCreateSerializer(serializers.ModelSerializer):
             pass
         return attrs
 
-    def create(self, validated_data: dict) -> Post:
-        request = self.context["request"]
-        user = request.user
-
-        # Snapshot do papel no momento do post (se existir no seu User)
-        author_role = getattr(user, "role", "") or ""
-
-        now = timezone.now()
-        status = validated_data.get("status", PostStatus.DRAFT)
-
-        post = Post.objects.create(
-            author=user,
-            author_role=author_role,
-            **validated_data,
-        )
-
-        # published_at consistente
-        if status == PostStatus.PUBLISHED and not post.published_at:
-            post.published_at = now
-            post.save(update_fields=["published_at"])
-
-        return post
-
 
 class PostUpdateSerializer(serializers.ModelSerializer):
     class Meta:

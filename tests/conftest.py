@@ -1,85 +1,100 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
-from django.utils import timezone
-from posts.models import Post
-from posts.enums import PostStatus
-from posts.enums import VisibilityScope
+from accounts.models.caregiver_profile import CaregiverProfile
+from accounts.models.elder_profile import ElderProfile
+from accounts.models.caregiver_elder_link import CaregiverElderLink
+from posts.models.posts import Post
+from posts.enums import VisibilityScope, PostStatus
+from accounts.enums import UserRole
 
 User = get_user_model()
-
 
 @pytest.fixture
 def api_client():
     return APIClient()
 
-
 @pytest.fixture
 def create_user(db):
-    """
-    Factory simples para criar usuários.
-    """
-    def _create_user(**kwargs):
-        password = kwargs.pop("password", "StrongPass@123")
-        email = kwargs.pop("email", "user@example.com")
-        full_name = kwargs.pop("full_name", "User Test")
-        role = kwargs.pop("role", "ELDER")
-
-        return User.objects.create_user(
-            email=email,
-            password=password,
-            full_name=full_name,
-            role=role,
-            **kwargs,
+    def _create_user(email="test@example.com", password="password123", role="ELDER", full_name="Test User", **extra_fields):
+        # Garante que o email seja único se não for passado
+        import uuid
+        if email == "test@example.com":
+             email = f"test_{uuid.uuid4().hex[:8]}@example.com"
+             
+        user = User.objects.create_user(
+            email=email, 
+            password=password, 
+            role=role, 
+            full_name=full_name, 
+            **extra_fields
         )
+        return user
     return _create_user
 
+@pytest.fixture
+def create_post(db):
+    def _create_post(author, text="Conteúdo do post", visibility_scope=VisibilityScope.PUBLIC, status=PostStatus.PUBLISHED, **extra_fields):
+        # Traduz visibility -> visibility_scope se necessário (para compatibilidade)
+        if "visibility" in extra_fields:
+            visibility_scope = extra_fields.pop("visibility")
+            
+        return Post.objects.create(
+            author=author,
+            text=text,
+            visibility_scope=visibility_scope,
+            status=status,
+            **extra_fields
+        )
+    return _create_post
 
 @pytest.fixture
 def auth_client(api_client, create_user):
-    """
-    Retorna um client autenticado via JWT.
-    """
-    def _auth(role="ELDER", email="elder@example.com", password="StrongPass@123"):
-        create_user(email=email, password=password, role=role)
-        token_resp = api_client.post(
-            "/api/v1/auth/token/",
-            {"email": email, "password": password},
-            format="json",
+    def _auth_client(email, password="password123", role="ELDER"):
+        user, created = User.objects.get_or_create(
+            email=email, 
+            defaults={"role": role, "full_name": "Auth User"}
         )
-        assert token_resp.status_code == 200, token_resp.content
-        access = token_resp.json()["data"]["access"]
-        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        if not created and not user.check_password(password):
+            user.set_password(password)
+            user.save()
+        api_client.force_authenticate(user=user)
         return api_client
+    return _auth_client
 
-    return _auth
-
+# --- Aliases para compatibilidade com meus novos testes ---
 
 @pytest.fixture
-def create_post(create_user):
-    """
-    Factory para criar Post diretamente no banco.
-    Útil para cenários de listagem/edição sem depender do endpoint de criação.
-    """
-    def _create_post(*, author=None, text="Olá", status=None, visibility_scope=None, **kwargs):
-        author = author or create_user(email="author@example.com")
-        status = status or PostStatus.DRAFT
-        visibility_scope = visibility_scope or VisibilityScope.PUBLIC
+def user_factory(create_user):
+    return create_user
 
-        post = Post.objects.create(
-            author=author,
-            author_role=getattr(author, "role", "") or "",
-            text=text,
-            status=status,
-            visibility_scope=visibility_scope,
-            **kwargs,
-        )
+@pytest.fixture
+def post_factory(create_post):
+    return create_post
 
-        # Se seu model usa published_at, simula coerência quando publicado
-        if hasattr(post, "published_at") and status == PostStatus.PUBLISHED and not post.published_at:
-            post.published_at = timezone.now()
-            post.save(update_fields=["published_at"])
+# --- Novas fixtures de domínio ---
 
-        return post
+@pytest.fixture
+def caregiver(create_user):
+    user = create_user(email="caregiver@amparo.com", role=UserRole.CAREGIVER)
+    CaregiverProfile.objects.get_or_create(user=user)
+    return user
 
-    return _create_post
+@pytest.fixture
+def elder(create_user):
+    user = create_user(email="elder@amparo.com", role=UserRole.ELDER)
+    ElderProfile.objects.get_or_create(user=user)
+    return user
+
+@pytest.fixture
+def other_user(create_user):
+    return create_user(email="other@amparo.com", role=UserRole.ELDER)
+
+@pytest.fixture
+def active_link(caregiver, elder):
+    return CaregiverElderLink.objects.create(
+        caregiver=caregiver.caregiver_profile,
+        elder=elder.elder_profile,
+        status=CaregiverElderLink.Status.ACTIVE,
+        is_active=True
+    )

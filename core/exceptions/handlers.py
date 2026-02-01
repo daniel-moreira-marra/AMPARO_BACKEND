@@ -5,11 +5,29 @@ from rest_framework import status
 from .responses import error_response
 from .codes import ErrorCode
 from .helpers import _stringify_error_detail
+from .domain import DomainException, ValidationError, PermissionDenied, NotFound
 
 def custom_exception_handler(exc, context):
     # print("EXC TYPE:", type(exc))
     # print("EXC REPR:", repr(exc))
     # print("EXC DETAIL:", getattr(exc, "detail", None))
+
+    # Handle Domain Exceptions
+    if isinstance(exc, DomainException):
+        status_code = status.HTTP_400_BAD_REQUEST
+        if isinstance(exc, ValidationError):
+            status_code = status.HTTP_400_BAD_REQUEST
+        elif isinstance(exc, PermissionDenied):
+            status_code = status.HTTP_403_FORBIDDEN
+        elif isinstance(exc, NotFound):
+            status_code = status.HTTP_404_NOT_FOUND
+
+        return error_response(
+            code=exc.code,
+            message=exc.message,
+            details=exc.details,
+            status_code=status_code,
+        )
 
     response = exception_handler(exc, context)
 

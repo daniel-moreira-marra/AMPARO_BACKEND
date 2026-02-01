@@ -9,6 +9,7 @@ from .professional_me import ProfessionalMeSerializer
 from .institution_me import InstitutionMeSerializer
 from .institution_elder_link import InstitutionElderLinkSerializer
 from .professional_elder_link import ProfessionalElderLinkSerializer
+from .user_serializers import UpdateMeSerializer, ChangePasswordSerializer
 
 
 __all__ = [
@@ -21,7 +22,7 @@ __all__ = [
     "CaregiverElderLinkSerializer",
     "GuardianElderLinkSerializer",
     "ProfessionalMeSerializer",
-    "ProfessionalElderLinkSerializer"
+    "ProfessionalElderLinkSerializer",
     "InstitutionMeSerializer",
     "InstitutionElderLinkSerializer",
 ]

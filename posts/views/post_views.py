@@ -1,5 +1,6 @@
 from django.utils import timezone
 from rest_framework import permissions, status, viewsets
+from ..permissions import IsPostOwner, CanEditPost, CanViewPost
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
@@ -19,6 +20,7 @@ from ..docs.post_endpoints import (
     schema_posts_partial_update,
     schema_posts_destroy,
 )
+from ..services.post_services import create_post, delete_post
 
 
 class IsAuthenticated(permissions.IsAuthenticated):
@@ -33,7 +35,18 @@ class MyPostsViewSet(viewsets.ModelViewSet):
     - Exclui soft-deletadas (deleted_at)
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_permissions(self):
+        """
+        Garante que para ações de escrita (update/destroy), somente o dono possa agir.
+        Isso complementa o filtro do get_queryset.
+        """
+        if self.action in ["update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated(), CanEditPost()]
+        if self.action == "retrieve":
+            return [permissions.IsAuthenticated(), CanViewPost()]
+        return super().get_permissions()
     http_method_names = ["get", "post", "put", "patch", "delete"]
 
     parser_classes = (MultiPartParser, FormParser, JSONParser)
@@ -66,9 +79,15 @@ class MyPostsViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        post = serializer.save()
+        
+        # Use Service Layer
+        post = create_post(
+            actor=request.user,
+            data=serializer.validated_data,
+            ip_address=request.META.get("REMOTE_ADDR"),
+            user_agent=request.META.get("HTTP_USER_AGENT"),
+        )
 
-        # Resposta no formato do "list/retrieve"
         response = Response(PostListSerializer(post).data, status=status.HTTP_201_CREATED)
         return wrap_success_response(response=response)
 
@@ -79,24 +98,21 @@ class MyPostsViewSet(viewsets.ModelViewSet):
 
     @schema_posts_update()
     def update(self, request, *args, **kwargs):
-        response = super().update(request, *args, **kwargs)
-        return wrap_success_response(response=response)
+        super().update(request, *args, **kwargs)
+        post = self.get_object()
+        return success_response(data=PostListSerializer(post).data)
 
     @schema_posts_partial_update()
     def partial_update(self, request, *args, **kwargs):
-        response = super().partial_update(request, *args, **kwargs)
-        return wrap_success_response(response=response)
+        super().partial_update(request, *args, **kwargs)
+        post = self.get_object()
+        return success_response(data=PostListSerializer(post).data)
 
     @schema_posts_destroy()
     def destroy(self, request, *args, **kwargs):
         post = self.get_object()
-
-        # Soft delete (preferível)
-        if hasattr(post, "deleted_at"):
-            post.deleted_at = timezone.now()
-            post.save(update_fields=["deleted_at"])
-            return success_response(data=None, status_code=status.HTTP_200_OK)
-
-        # Fallback: hard delete
-        post.delete()
+        
+        # Use Service Layer
+        delete_post(actor=request.user, post_id=post.id)
+        
         return success_response(data=None, status_code=status.HTTP_200_OK)

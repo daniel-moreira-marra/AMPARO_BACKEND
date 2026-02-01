@@ -30,31 +30,6 @@ class SignupSerializer(serializers.Serializer):
         password_validation.validate_password(value)
         return value
 
-    @transaction.atomic
-    def create(self, validated_data):
-        password = validated_data.pop("password")
-
-        user = User.objects.create_user(
-            password=password,
-            **validated_data,
-        )
-
-        # Por enquanto, só existe o profile de idoso
-        if getattr(user, "role", None) == "ELDER":
-            ElderProfile.objects.create(user=user)
-        elif getattr(user, "role", None) == "CAREGIVER":
-            CaregiverProfile.objects.create(user=user)
-        elif getattr(user, "role", None) == "GUARDIAN":
-            GuardianProfile.objects.create(user=user)
-        elif getattr(user, "role", None) == "INSTITUTION":
-            InstitutionProfile.objects.create(user=user)
-        elif getattr(user, "role", None) == "PROFESSIONAL":
-            ProfessionalProfile.objects.create(user=user)
-        elif getattr(user, "role", None) is None:
-            raise serializers.ValidationError("O campo 'role' é obrigatório.")
-
-        return user
-
 
 class SignupResponseSerializer(serializers.ModelSerializer):
     class Meta:

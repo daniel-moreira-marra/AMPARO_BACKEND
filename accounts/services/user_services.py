@@ -1,0 +1,100 @@
+from django.db import transaction
+from django.contrib.auth import get_user_model, password_validation
+from typing import Optional, Dict, Any
+
+from core.exceptions import domain as domain_exceptions
+from core.events import dispatch
+from accounts.models import ElderProfile, CaregiverProfile, GuardianProfile, InstitutionProfile, ProfessionalProfile
+
+User = get_user_model()
+
+@transaction.atomic
+def register_user(*, data: Dict[str, Any]) -> User:
+    """
+    Service to register a new user and create their respective profile.
+    """
+    email = data.get("email")
+    password = data.get("password")
+    full_name = data.get("full_name")
+    phone = data.get("phone", "")
+    role = data.get("role")
+
+    if not email:
+        raise domain_exceptions.ValidationError("Email is required.", code="missing_email")
+    
+    if User.objects.filter(email=email).exists():
+        raise domain_exceptions.ValidationError("Email already in use.", code="email_exists")
+
+    # Validate password using Django's built-in validators
+    try:
+        password_validation.validate_password(password)
+    except Exception as e:
+        raise domain_exceptions.ValidationError(str(e), code="invalid_password")
+
+    user = User.objects.create_user(
+        email=email,
+        password=password,
+        full_name=full_name,
+        phone=phone,
+        role=role
+    )
+
+    # Create profile based on role
+    if role == "ELDER":
+        ElderProfile.objects.create(user=user)
+    elif role == "CAREGIVER":
+        CaregiverProfile.objects.create(user=user)
+    elif role == "GUARDIAN":
+        GuardianProfile.objects.create(user=user)
+    elif role == "INSTITUTION":
+        InstitutionProfile.objects.create(user=user)
+    elif role == "PROFESSIONAL":
+        ProfessionalProfile.objects.create(user=user)
+    else:
+        raise domain_exceptions.ValidationError(f"Invalid role: {role}", code="invalid_role")
+
+    dispatch("user_registered", user_id=user.id, email=user.email, role=user.role)
+
+    return user
+
+
+@transaction.atomic
+def update_user_profile(*, user: User, data: Dict[str, Any]) -> User:
+    """
+    Service to update basic user profile information.
+    """
+    full_name = data.get("full_name")
+    phone = data.get("phone")
+
+    if full_name is not None:
+        user.full_name = full_name
+    if phone is not None:
+        user.phone = phone
+
+    user.save()
+
+    dispatch("user_profile_updated", user_id=user.id)
+
+    return user
+
+
+@transaction.atomic
+def change_user_password(*, user: User, data: Dict[str, Any]) -> None:
+    """
+    Service to change a user's password.
+    """
+    old_password = data.get("old_password")
+    new_password = data.get("new_password")
+
+    if not user.check_password(old_password):
+        raise domain_exceptions.ValidationError("Incorrect old password.", code="invalid_old_password")
+
+    try:
+        password_validation.validate_password(new_password, user=user)
+    except Exception as e:
+        raise domain_exceptions.ValidationError(str(e), code="invalid_new_password")
+
+    user.set_password(new_password)
+    user.save()
+
+    dispatch("user_password_changed", user_id=user.id)
