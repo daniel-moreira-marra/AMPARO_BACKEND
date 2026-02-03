@@ -7,7 +7,10 @@ from .codes import ErrorCode
 from .helpers import _stringify_error_detail
 from .domain import DomainException, ValidationError, PermissionDenied, NotFound
 
+from core.logging import get_request_id
+
 def custom_exception_handler(exc, context):
+    request_id = get_request_id()
     # print("EXC TYPE:", type(exc))
     # print("EXC REPR:", repr(exc))
     # print("EXC DETAIL:", getattr(exc, "detail", None))
@@ -27,6 +30,7 @@ def custom_exception_handler(exc, context):
             message=exc.message,
             details=exc.details,
             status_code=status_code,
+            request_id=request_id,
         )
 
     response = exception_handler(exc, context)
@@ -37,6 +41,7 @@ def custom_exception_handler(exc, context):
             code=ErrorCode.INVALID_JSON,
             message="Payload inválido. Verifique se o JSON está bem formatado.",
             status_code=status.HTTP_400_BAD_REQUEST,
+            request_id=request_id,
         )
 
     # Qualquer exceção do DRF (preserva status code)
@@ -67,6 +72,7 @@ def custom_exception_handler(exc, context):
             message=message,
             details=details,
             status_code=exc.status_code,
+            request_id=request_id,
         )
 
     # Se DRF já gerou resposta (ex.: Http404 convertido), retorna
@@ -78,4 +84,5 @@ def custom_exception_handler(exc, context):
         code=ErrorCode.SERVER_ERROR,
         message="Erro interno do servidor.",
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        request_id=request_id,
     )

@@ -1,0 +1,3219 @@
+openapi: 3.0.3
+info:
+  title: API Rede de Cuidados
+  version: 1.0.0
+  description: API para conectar idosos, responsáveis, cuidadores e instituições.
+paths:
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/auth/me/:
+    get:
+      operationId: v1_auth_me_retrieve
+      description: Retorna os dados do usuario autenticado. Requer autenticacao JWT.
+      summary: Dados do usuario logado
+      tags:
+      - Auth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+        '401':
+          description: Nao autenticado
+    patch:
+      operationId: v1_auth_me_partial_update
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/password/change/:
+    post:
+      operationId: v1_auth_password_change_create
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/signup/:
+    post:
+      operationId: v1_auth_signup_create
+      description: Cria um novo usuário no sistema. Não requer autenticação.
+      summary: Cadastro de usuário
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+          description: ''
+        '400':
+          description: Dados invalidos
+  /api/v1/auth/token/:
+    post:
+      operationId: v1_auth_token_create
+      description: Autentica o usuário utilizando e-mail e senha, e retorna tokens
+        JWT.
+      summary: Login (JWT) por e-mail
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenByEmailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenByEmailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenByEmailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenByEmail'
+          description: ''
+        '400':
+          description: Credenciais inválidas.
+  /api/v1/auth/token/refresh/:
+    post:
+      operationId: v1_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/caregivers/me/:
+    get:
+      operationId: v1_caregivers_me_retrieve
+      description: Permite que o próprio usuário com role=CAREGIVER consulte/atualize
+        seu CaregiverProfile.
+      summary: Obter meu perfil de cuidador
+      tags:
+      - Cuidadores
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverMe'
+          description: ''
+    put:
+      operationId: v1_caregivers_me_update
+      description: Permite que o próprio usuário com role=CAREGIVER consulte/atualize
+        seu CaregiverProfile.
+      summary: Substituir meu perfil de cuidador
+      tags:
+      - Cuidadores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaregiverMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CaregiverMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CaregiverMeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverMe'
+          description: ''
+    patch:
+      operationId: v1_caregivers_me_partial_update
+      description: Permite que o próprio usuário com role=CAREGIVER consulte/atualize
+        seu CaregiverProfile.
+      summary: Atualizar parcialmente meu perfil de cuidador
+      tags:
+      - Cuidadores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCaregiverMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCaregiverMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCaregiverMeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverMe'
+          description: ''
+  /api/v1/caregivers/me/link-to-elder/:
+    get:
+      operationId: v1_caregivers_me_link_to_elder_list
+      description: |-
+        CRUD dos vínculos Caregiver ↔ Elder.
+
+        Escopo:
+        - O cuidador só acessa/edita vínculos do seu próprio CaregiverProfile.
+      summary: Listar vínculos do meu perfil de cuidador com idosos
+      tags:
+      - Cuidadores
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaregiverElderLink'
+          description: ''
+    post:
+      operationId: v1_caregivers_me_link_to_elder_create
+      description: |-
+        CRUD dos vínculos Caregiver ↔ Elder.
+
+        Escopo:
+        - O cuidador só acessa/edita vínculos do seu próprio CaregiverProfile.
+      summary: Criar vínculo entre meu perfil de cuidador e um idoso
+      tags:
+      - Cuidadores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaregiverElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CaregiverElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CaregiverElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverElderLink'
+          description: ''
+  /api/v1/caregivers/me/link-to-elder/{id}/:
+    get:
+      operationId: v1_caregivers_me_link_to_elder_retrieve
+      description: |-
+        CRUD dos vínculos Caregiver ↔ Elder.
+
+        Escopo:
+        - O cuidador só acessa/edita vínculos do seu próprio CaregiverProfile.
+      summary: Detalhar um vínculo idoso-cuidador do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Cuidadores
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverElderLink'
+          description: ''
+    put:
+      operationId: v1_caregivers_me_link_to_elder_update
+      description: |-
+        CRUD dos vínculos Caregiver ↔ Elder.
+
+        Escopo:
+        - O cuidador só acessa/edita vínculos do seu próprio CaregiverProfile.
+      summary: Substituir um vínculo idoso-cuidador do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Cuidadores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaregiverElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CaregiverElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CaregiverElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverElderLink'
+          description: ''
+    patch:
+      operationId: v1_caregivers_me_link_to_elder_partial_update
+      description: |-
+        CRUD dos vínculos Caregiver ↔ Elder.
+
+        Escopo:
+        - O cuidador só acessa/edita vínculos do seu próprio CaregiverProfile.
+      summary: Atualizar parcialmente um vínculo idoso-cuidador do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Cuidadores
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCaregiverElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCaregiverElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCaregiverElderLinkRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaregiverElderLink'
+          description: ''
+    delete:
+      operationId: v1_caregivers_me_link_to_elder_destroy
+      description: |-
+        CRUD dos vínculos Caregiver ↔ Elder.
+
+        Escopo:
+        - O cuidador só acessa/edita vínculos do seu próprio CaregiverProfile.
+      summary: Remover um vínculo idoso-cuidador do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Cuidadores
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/elders/me/:
+    get:
+      operationId: v1_elders_me_retrieve
+      description: Permite que o próprio usuário com role=ELDER consulte/atualize
+        seu ElderProfile.
+      summary: Obter meu perfil de idoso
+      tags:
+      - Idosos
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ElderMe'
+          description: ''
+    put:
+      operationId: v1_elders_me_update
+      description: Permite que o próprio usuário com role=ELDER consulte/atualize
+        seu ElderProfile.
+      summary: Substituir meu perfil de idoso
+      tags:
+      - Idosos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElderMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ElderMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ElderMeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ElderMe'
+          description: ''
+    patch:
+      operationId: v1_elders_me_partial_update
+      description: Permite que o próprio usuário com role=ELDER consulte/atualize
+        seu ElderProfile.
+      summary: Atualizar parcialmente meu perfil de idoso
+      tags:
+      - Idosos
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedElderMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedElderMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedElderMeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ElderMe'
+          description: ''
+  /api/v1/guardians/link-to-elder/:
+    get:
+      operationId: v1_guardians_link_to_elder_list
+      description: |-
+        CRUD dos vínculos Guardian ↔ Elder.
+
+        Escopo:
+        - O guardian só acessa/edita vínculos do seu próprio GuardianProfile.
+      summary: Listar meus vínculos com idosos
+      tags:
+      - Responsáveis
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GuardianElderLink'
+          description: ''
+    post:
+      operationId: v1_guardians_link_to_elder_create
+      description: |-
+        CRUD dos vínculos Guardian ↔ Elder.
+
+        Escopo:
+        - O guardian só acessa/edita vínculos do seu próprio GuardianProfile.
+      summary: Criar vínculo com um idoso
+      tags:
+      - Responsáveis
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuardianElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuardianElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuardianElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardianElderLink'
+          description: ''
+  /api/v1/health/:
+    get:
+      operationId: v1_health_retrieve
+      description: Endpoint público para o frontend (ou monitoramento) verificar se
+        a API está ativa. Não exige autenticação.
+      summary: Health check da API
+      tags:
+      - Health
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: ok
+                      message:
+                        type: string
+                        example: API de rede de cuidados ativa
+                    required:
+                    - status
+                    - message
+                required:
+                - success
+                - data
+          description: API ativa
+  /api/v1/institutions/me/:
+    get:
+      operationId: v1_institutions_me_retrieve
+      description: Permite que o próprio usuário com role=INSTITUTION consulte/atualize
+        seu InstitutionProfile.
+      summary: Obter meu perfil de instituição
+      tags:
+      - Instituições
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionMe'
+          description: ''
+    put:
+      operationId: v1_institutions_me_update
+      description: Permite que o próprio usuário com role=INSTITUTION consulte/atualize
+        seu InstitutionProfile.
+      summary: Substituir meu perfil de instituição
+      tags:
+      - Instituições
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InstitutionMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InstitutionMeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionMe'
+          description: ''
+    patch:
+      operationId: v1_institutions_me_partial_update
+      description: Permite que o próprio usuário com role=INSTITUTION consulte/atualize
+        seu InstitutionProfile.
+      summary: Atualizar parcialmente meu perfil de instituição
+      tags:
+      - Instituições
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionMeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionMe'
+          description: ''
+  /api/v1/institutions/me/link-to-elder/:
+    get:
+      operationId: v1_institutions_me_link_to_elder_list
+      description: |-
+        CRUD dos vínculos Institution ↔ Elder.
+
+        Escopo:
+        - A instituição só acessa/edita vínculos do seu próprio InstitutionProfile.
+      summary: Listar vínculos da minha instituição com idosos
+      tags:
+      - Instituições
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstitutionElderLink'
+          description: ''
+    post:
+      operationId: v1_institutions_me_link_to_elder_create
+      description: |-
+        CRUD dos vínculos Institution ↔ Elder.
+
+        Escopo:
+        - A instituição só acessa/edita vínculos do seu próprio InstitutionProfile.
+      summary: Criar vínculo entre minha instituição e um idoso
+      tags:
+      - Instituições
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InstitutionElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InstitutionElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionElderLink'
+          description: ''
+  /api/v1/institutions/me/link-to-elder/{id}/:
+    get:
+      operationId: v1_institutions_me_link_to_elder_retrieve
+      description: |-
+        CRUD dos vínculos Institution ↔ Elder.
+
+        Escopo:
+        - A instituição só acessa/edita vínculos do seu próprio InstitutionProfile.
+      summary: Detalhar um vínculo idoso-instituição da minha instituição
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Instituições
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionElderLink'
+          description: ''
+    put:
+      operationId: v1_institutions_me_link_to_elder_update
+      description: |-
+        CRUD dos vínculos Institution ↔ Elder.
+
+        Escopo:
+        - A instituição só acessa/edita vínculos do seu próprio InstitutionProfile.
+      summary: Substituir um vínculo idoso-instituição da minha instituição
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Instituições
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstitutionElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InstitutionElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InstitutionElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionElderLink'
+          description: ''
+    patch:
+      operationId: v1_institutions_me_link_to_elder_partial_update
+      description: |-
+        CRUD dos vínculos Institution ↔ Elder.
+
+        Escopo:
+        - A instituição só acessa/edita vínculos do seu próprio InstitutionProfile.
+      summary: Atualizar parcialmente um vínculo idoso-instituição da minha instituição
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Instituições
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInstitutionElderLinkRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstitutionElderLink'
+          description: ''
+    delete:
+      operationId: v1_institutions_me_link_to_elder_destroy
+      description: |-
+        CRUD dos vínculos Institution ↔ Elder.
+
+        Escopo:
+        - A instituição só acessa/edita vínculos do seu próprio InstitutionProfile.
+      summary: Remover um vínculo idoso-instituição da minha instituição
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Instituições
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/posts/feed/:
+    get:
+      operationId: v1_posts_feed_list
+      description: |-
+        Lista postagens publicadas visíveis ao usuário.
+
+        **Regras de Negócio:**
+        - Apenas postagens com status `published` são retornadas.
+        - A visibilidade respeita o escopo configurado pelo autor.
+        - O feed é cacheado por 60 segundos por usuário/página.
+
+        **Paginação:**
+        - Usa `CursorPagination` por padrão (parâmetro `cursor`).
+        - Suporta fallback para paginação por página caso o parâmetro `page` seja informado.
+      summary: Listar feed geral
+      parameters:
+      - in: query
+        name: cursor
+        schema:
+          type: string
+        description: Token do cursor para a próxima página de resultados.
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: Número da página (ativa modo de paginação tradicional).
+      tags:
+      - Posts
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FeedPostSuccessResponse'
+              examples:
+                RespostaDoFeed:
+                  value:
+                  - success: true
+                    data:
+                      next: http://api.exemplo.com/api/v1/posts/feed/?cursor=cD0yMDI0LTAyLTAz
+                      previous: null
+                      results:
+                      - id: 1
+                        author_name: João Silva
+                        text: Olá mundo!
+                        likes_count: 5
+                        created_at: '2024-02-03T10:00:00Z'
+                  summary: Resposta do Feed
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+  /api/v1/posts/my-posts/:
+    get:
+      operationId: v1_posts_my_posts_list
+      description: Retorna apenas postagens do usuário autenticado que não foram deletadas.
+      summary: Listar minhas postagens
+      tags:
+      - Posts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PostListSuccessResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+    post:
+      operationId: v1_posts_my_posts_create
+      description: Cria uma nova postagem vinculada ao usuário autenticado.
+      summary: Criar postagem
+      tags:
+      - Posts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostCreateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListSuccessResponse'
+              examples:
+                ExemploDeSucesso:
+                  value:
+                    success: true
+                    data:
+                      id: 123
+                      text: Minha nova postagem!
+                      status: published
+                      visibility_scope: public
+                      created_at: '2024-02-03T14:30:00Z'
+                  summary: Exemplo de Sucesso
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                ErroDeValidação:
+                  value:
+                    success: false
+                    error:
+                      code: validation_error
+                      message: Erro de validação nos dados enviados.
+                      details:
+                        text:
+                        - Este campo é obrigatório.
+                    request_id: 550e8400-e29b-41d5-a716-446655440000
+                  summary: Erro de Validação
+          description: Requisição inválida ou erro de validação.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+  /api/v1/posts/my-posts/{id}/:
+    get:
+      operationId: v1_posts_my_posts_retrieve
+      description: |-
+        CRUD de postagens do próprio usuário.
+        - Queryset sempre filtrado por author=request.user
+        - Exclui soft-deletadas (deleted_at)
+      summary: Detalhar minha postagem
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Posts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListSuccessResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Recurso não encontrado.
+    put:
+      operationId: v1_posts_my_posts_update
+      description: |-
+        CRUD de postagens do próprio usuário.
+        - Queryset sempre filtrado por author=request.user
+        - Exclui soft-deletadas (deleted_at)
+      summary: Atualizar minha postagem
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Posts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PostUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PostUpdateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                ErroDeValidação:
+                  value:
+                    success: false
+                    error:
+                      code: validation_error
+                      message: Erro de validação nos dados enviados.
+                      details:
+                        text:
+                        - Este campo é obrigatório.
+                    request_id: 550e8400-e29b-41d5-a716-446655440000
+                  summary: Erro de Validação
+          description: Requisição inválida ou erro de validação.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Permissão negada.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Recurso não encontrado.
+    patch:
+      operationId: v1_posts_my_posts_partial_update
+      description: |-
+        CRUD de postagens do próprio usuário.
+        - Queryset sempre filtrado por author=request.user
+        - Exclui soft-deletadas (deleted_at)
+      summary: Atualizar parcialmente minha postagem
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Posts
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPostUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPostUpdateRequest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPostUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostListSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                ErroDeValidação:
+                  value:
+                    success: false
+                    error:
+                      code: validation_error
+                      message: Erro de validação nos dados enviados.
+                      details:
+                        text:
+                        - Este campo é obrigatório.
+                    request_id: 550e8400-e29b-41d5-a716-446655440000
+                  summary: Erro de Validação
+          description: Requisição inválida ou erro de validação.
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Permissão negada.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Recurso não encontrado.
+    delete:
+      operationId: v1_posts_my_posts_destroy
+      description: Realiza o soft delete de uma postagem do próprio usuário.
+      summary: Deletar minha postagem
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Posts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+              examples:
+                NãoAutenticado:
+                  value:
+                    success: false
+                    error:
+                      code: not_authenticated
+                      message: As credenciais de autenticação não foram fornecidas.
+                      details: null
+                  summary: Não Autenticado
+          description: Autenticação necessária ou inválida.
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Permissão negada.
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BaseErrorResponse'
+          description: Recurso não encontrado.
+  /api/v1/professionals/me/:
+    get:
+      operationId: v1_professionals_me_retrieve
+      summary: Obter meu perfil profissional
+      tags:
+      - Profissionais
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalMe'
+          description: ''
+    put:
+      operationId: v1_professionals_me_update
+      summary: Substituir meu perfil profissional
+      tags:
+      - Profissionais
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfessionalMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfessionalMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfessionalMeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalMe'
+          description: ''
+    patch:
+      operationId: v1_professionals_me_partial_update
+      summary: Atualizar parcialmente meu perfil profissional
+      tags:
+      - Profissionais
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfessionalMeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfessionalMeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfessionalMeRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalMe'
+          description: ''
+  /api/v1/professionals/me/link-to-elder/:
+    get:
+      operationId: v1_professionals_me_link_to_elder_list
+      description: |-
+        CRUD dos vínculos Professional ↔ Elder.
+
+        Escopo:
+        - O profissional só acessa/edita vínculos do seu próprio ProfessionalProfile.
+      summary: Listar vínculos do meu perfil profissional com idosos
+      tags:
+      - Profissionais
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProfessionalElderLink'
+          description: ''
+    post:
+      operationId: v1_professionals_me_link_to_elder_create
+      description: |-
+        CRUD dos vínculos Professional ↔ Elder.
+
+        Escopo:
+        - O profissional só acessa/edita vínculos do seu próprio ProfessionalProfile.
+      summary: Criar vínculo entre meu perfil profissional e um idoso
+      tags:
+      - Profissionais
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfessionalElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfessionalElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfessionalElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalElderLink'
+          description: ''
+  /api/v1/professionals/me/link-to-elder/{id}/:
+    get:
+      operationId: v1_professionals_me_link_to_elder_retrieve
+      description: |-
+        CRUD dos vínculos Professional ↔ Elder.
+
+        Escopo:
+        - O profissional só acessa/edita vínculos do seu próprio ProfessionalProfile.
+      summary: Detalhar um vínculo idoso-profissional do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Profissionais
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalElderLink'
+          description: ''
+    put:
+      operationId: v1_professionals_me_link_to_elder_update
+      description: |-
+        CRUD dos vínculos Professional ↔ Elder.
+
+        Escopo:
+        - O profissional só acessa/edita vínculos do seu próprio ProfessionalProfile.
+      summary: Substituir um vínculo idoso-profissional do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Profissionais
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfessionalElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProfessionalElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfessionalElderLinkRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalElderLink'
+          description: ''
+    patch:
+      operationId: v1_professionals_me_link_to_elder_partial_update
+      description: |-
+        CRUD dos vínculos Professional ↔ Elder.
+
+        Escopo:
+        - O profissional só acessa/edita vínculos do seu próprio ProfessionalProfile.
+      summary: Atualizar parcialmente um vínculo idoso-profissional do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Profissionais
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfessionalElderLinkRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfessionalElderLinkRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfessionalElderLinkRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalElderLink'
+          description: ''
+    delete:
+      operationId: v1_professionals_me_link_to_elder_destroy
+      description: |-
+        CRUD dos vínculos Professional ↔ Elder.
+
+        Escopo:
+        - O profissional só acessa/edita vínculos do seu próprio ProfessionalProfile.
+      summary: Remover um vínculo idoso-profissional do meu perfil
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Profissionais
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+components:
+  schemas:
+    BaseErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+        request_id:
+          type: string
+          format: uuid
+          description: ID da requisição para rastreamento.
+      required:
+      - error
+    BlankEnum:
+      enum:
+      - ''
+    CareTypesInputEnum:
+      enum:
+      - HOME
+      - HOSPITAL
+      - NIGHT_SHIFT
+      - DAY_SHIFT
+      - COMPANION
+      type: string
+      description: |-
+        * `HOME` - Domiciliar
+        * `HOSPITAL` - Hospitalar
+        * `NIGHT_SHIFT` - Plantão noturno
+        * `DAY_SHIFT` - Plantão diurno
+        * `COMPANION` - Acompanhante
+    CaregiverElderLink:
+      type: object
+      description: |-
+        Serializer do vínculo Caregiver ↔ Elder.
+
+        Segurança:
+        - caregiver é read_only e vem do usuário logado (CaregiverProfile).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        caregiver:
+          type: integer
+          readOnly: true
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status344Enum'
+        started_at:
+          type: string
+          format: date
+          nullable: true
+          title: Início
+        ended_at:
+          type: string
+          format: date
+          nullable: true
+          title: Fim
+        agreed_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor/hora acordado
+          description: Snapshot do valor combinado no vínculo (pode diferir do perfil).
+        notes:
+          type: string
+          title: Observações
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - caregiver
+      - created_at
+      - elder
+      - id
+      - updated_at
+    CaregiverElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo Caregiver ↔ Elder.
+
+        Segurança:
+        - caregiver é read_only e vem do usuário logado (CaregiverProfile).
+      properties:
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status344Enum'
+        started_at:
+          type: string
+          format: date
+          nullable: true
+          title: Início
+        ended_at:
+          type: string
+          format: date
+          nullable: true
+          title: Fim
+        agreed_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor/hora acordado
+          description: Snapshot do valor combinado no vínculo (pode diferir do perfil).
+        notes:
+          type: string
+          title: Observações
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+      required:
+      - elder
+    CaregiverMe:
+      type: object
+      description: |-
+        Atualização do próprio perfil de cuidador.
+
+        Abordagem 1:
+        - care_types (read): devolve a lista de tipos cadastrados para o cuidador
+        - care_types_input (write): recebe a lista de tipos para sincronizar no banco
+      properties:
+        bio:
+          type: string
+          title: Biografia
+        experience_years:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Anos de experiência
+        is_available:
+          type: boolean
+          title: Disponível para contratação
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+        care_types:
+          type: string
+          readOnly: true
+          description: Lista de tipos de atendimento que o cuidador realiza.
+      required:
+      - care_types
+    CaregiverMeRequest:
+      type: object
+      description: |-
+        Atualização do próprio perfil de cuidador.
+
+        Abordagem 1:
+        - care_types (read): devolve a lista de tipos cadastrados para o cuidador
+        - care_types_input (write): recebe a lista de tipos para sincronizar no banco
+      properties:
+        bio:
+          type: string
+          title: Biografia
+        experience_years:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Anos de experiência
+        is_available:
+          type: boolean
+          title: Disponível para contratação
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+        care_types_input:
+          type: array
+          items:
+            $ref: '#/components/schemas/CareTypesInputEnum'
+          writeOnly: true
+          description: Lista de tipos de atendimento para salvar no perfil (substitui
+            o conjunto atual).
+    CognitiveStatusEnum:
+      enum:
+      - LUCID
+      - MILD_IMPAIRMENT
+      - DEMENTIA
+      - NOT_INFORMED
+      type: string
+      description: |-
+        * `LUCID` - Lúcido(a)
+        * `MILD_IMPAIRMENT` - Comprometimento leve
+        * `DEMENTIA` - Demência
+        * `NOT_INFORMED` - Não informado
+    ElderMe:
+      type: object
+      description: Serializer para o próprio idoso atualizar seu perfil.
+      properties:
+        preferred_name:
+          type: string
+          title: Nome social/preferido
+          maxLength: 150
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+          title: Data de nascimento
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          title: Gênero
+        mobility_level:
+          allOf:
+          - $ref: '#/components/schemas/MobilityLevelEnum'
+          title: Mobilidade
+        cognitive_status:
+          allOf:
+          - $ref: '#/components/schemas/CognitiveStatusEnum'
+          title: Condição cognitiva
+        has_fall_risk:
+          type: boolean
+          title: Risco de quedas
+        needs_medication_support:
+          type: boolean
+          title: Precisa de ajuda com medicação
+        requires_24h_care:
+          type: boolean
+          title: Necessita cuidado 24h
+        medical_conditions:
+          type: string
+          title: Condições médicas
+        allergies:
+          type: string
+          title: Alergias
+        medications:
+          type: string
+          title: Medicações
+        medical_notes:
+          type: string
+          title: Observações médicas
+        emergency_contact_name:
+          type: string
+          title: Contato de emergência - nome
+          maxLength: 150
+        emergency_contact_phone:
+          type: string
+          title: Contato de emergência - telefone
+          maxLength: 30
+        emergency_contact_relationship:
+          type: string
+          title: Contato de emergência - relação
+          maxLength: 60
+        is_active:
+          type: boolean
+          title: Ativo
+    ElderMeRequest:
+      type: object
+      description: Serializer para o próprio idoso atualizar seu perfil.
+      properties:
+        preferred_name:
+          type: string
+          title: Nome social/preferido
+          maxLength: 150
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+          title: Data de nascimento
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          title: Gênero
+        mobility_level:
+          allOf:
+          - $ref: '#/components/schemas/MobilityLevelEnum'
+          title: Mobilidade
+        cognitive_status:
+          allOf:
+          - $ref: '#/components/schemas/CognitiveStatusEnum'
+          title: Condição cognitiva
+        has_fall_risk:
+          type: boolean
+          title: Risco de quedas
+        needs_medication_support:
+          type: boolean
+          title: Precisa de ajuda com medicação
+        requires_24h_care:
+          type: boolean
+          title: Necessita cuidado 24h
+        medical_conditions:
+          type: string
+          title: Condições médicas
+        allergies:
+          type: string
+          title: Alergias
+        medications:
+          type: string
+          title: Medicações
+        medical_notes:
+          type: string
+          title: Observações médicas
+        emergency_contact_name:
+          type: string
+          title: Contato de emergência - nome
+          maxLength: 150
+        emergency_contact_phone:
+          type: string
+          title: Contato de emergência - telefone
+          maxLength: 30
+        emergency_contact_relationship:
+          type: string
+          title: Contato de emergência - relação
+          maxLength: 60
+        is_active:
+          type: boolean
+          title: Ativo
+    ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Código de erro único da aplicação.
+        message:
+          type: string
+          description: Mensagem legível para humanos.
+        details:
+          nullable: true
+          description: 'Detalhes adicionais do erro (ex.: erros de campo).'
+      required:
+      - code
+      - message
+    FeedPost:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author_name:
+          type: string
+          readOnly: true
+        text:
+          type: string
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        image_alt_text:
+          type: string
+          readOnly: true
+        likes_count:
+          type: integer
+          readOnly: true
+        comments_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - author_name
+      - comments_count
+      - created_at
+      - id
+      - image
+      - image_alt_text
+      - likes_count
+      - published_at
+      - text
+    FeedPostSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeedPost'
+      required:
+      - data
+    GenderEnum:
+      enum:
+      - MALE
+      - FEMALE
+      - OTHER
+      - NOT_INFORMED
+      type: string
+      description: |-
+        * `MALE` - Masculino
+        * `FEMALE` - Feminino
+        * `OTHER` - Outro
+        * `NOT_INFORMED` - Não informado
+    GuardianElderLink:
+      type: object
+      description: |-
+        Serializer do vínculo entre Guardian e Elder.
+
+        Segurança:
+        - guardian é read_only e vem do usuário logado.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        guardian:
+          type: integer
+          readOnly: true
+        elder:
+          type: integer
+        relationship:
+          $ref: '#/components/schemas/RelationshipEnum'
+        is_legal_guardian:
+          type: boolean
+        can_view_medical:
+          type: boolean
+        can_hire:
+          type: boolean
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - elder
+      - guardian
+      - id
+    GuardianElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo entre Guardian e Elder.
+
+        Segurança:
+        - guardian é read_only e vem do usuário logado.
+      properties:
+        elder:
+          type: integer
+        relationship:
+          $ref: '#/components/schemas/RelationshipEnum'
+        is_legal_guardian:
+          type: boolean
+        can_view_medical:
+          type: boolean
+        can_hire:
+          type: boolean
+        is_active:
+          type: boolean
+      required:
+      - elder
+    InstitutionElderLink:
+      type: object
+      description: |-
+        Serializer do vínculo Institution ↔ Elder.
+
+        Segurança:
+        - institution é read_only e vem do usuário logado (InstitutionProfile).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        institution:
+          type: integer
+          readOnly: true
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/InstitutionElderLinkStatusEnum'
+        admitted_at:
+          type: string
+          format: date
+          nullable: true
+          title: Data de admissão
+        discharged_at:
+          type: string
+          format: date
+          nullable: true
+          title: Data de saída
+        room:
+          type: string
+          title: Quarto
+          maxLength: 30
+        bed:
+          type: string
+          title: Leito
+          maxLength: 30
+        notes:
+          type: string
+          title: Observações do vínculo
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - created_at
+      - elder
+      - id
+      - institution
+      - updated_at
+    InstitutionElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo Institution ↔ Elder.
+
+        Segurança:
+        - institution é read_only e vem do usuário logado (InstitutionProfile).
+      properties:
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/InstitutionElderLinkStatusEnum'
+        admitted_at:
+          type: string
+          format: date
+          nullable: true
+          title: Data de admissão
+        discharged_at:
+          type: string
+          format: date
+          nullable: true
+          title: Data de saída
+        room:
+          type: string
+          title: Quarto
+          maxLength: 30
+        bed:
+          type: string
+          title: Leito
+          maxLength: 30
+        notes:
+          type: string
+          title: Observações do vínculo
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+      required:
+      - elder
+    InstitutionElderLinkStatusEnum:
+      enum:
+      - ACTIVE
+      - DISCHARGED
+      - TRANSFERRED
+      - CANCELLED
+      - OTHER
+      type: string
+      description: |-
+        * `ACTIVE` - Ativo
+        * `DISCHARGED` - Alta/saída
+        * `TRANSFERRED` - Transferido
+        * `CANCELLED` - Cancelado
+        * `OTHER` - Outro
+    InstitutionMe:
+      type: object
+      description: Atualização do próprio perfil de instituição.
+      properties:
+        legal_name:
+          type: string
+          title: Razão social
+          maxLength: 255
+        trade_name:
+          type: string
+          title: Nome fantasia
+          maxLength: 255
+        cnpj:
+          type: string
+          description: Armazene apenas números. Validação pode ser adicionada no serializer.
+          maxLength: 14
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Tipo
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Capacidade
+        website:
+          type: string
+          format: uri
+          title: Site
+          maxLength: 200
+        address_line:
+          type: string
+          title: Endereço
+          maxLength: 255
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+        zip_code:
+          type: string
+          title: CEP
+          maxLength: 8
+        license_number:
+          type: string
+          title: Nº licença/alvará
+          maxLength: 80
+        is_verified:
+          type: boolean
+          readOnly: true
+          title: Instituição verificada
+      required:
+      - is_verified
+      - legal_name
+    InstitutionMeRequest:
+      type: object
+      description: Atualização do próprio perfil de instituição.
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          title: Razão social
+          maxLength: 255
+        trade_name:
+          type: string
+          title: Nome fantasia
+          maxLength: 255
+        cnpj:
+          type: string
+          description: Armazene apenas números. Validação pode ser adicionada no serializer.
+          maxLength: 14
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Tipo
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Capacidade
+        website:
+          type: string
+          format: uri
+          title: Site
+          maxLength: 200
+        address_line:
+          type: string
+          title: Endereço
+          maxLength: 255
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+        zip_code:
+          type: string
+          title: CEP
+          maxLength: 8
+        license_number:
+          type: string
+          title: Nº licença/alvará
+          maxLength: 80
+      required:
+      - legal_name
+    InstitutionTypeEnum:
+      enum:
+      - ILPI
+      - SHELTER
+      - CLINIC
+      - HOSPITAL
+      - OTHER
+      type: string
+      description: |-
+        * `ILPI` - ILPI (Longa Permanência)
+        * `SHELTER` - Abrigo
+        * `CLINIC` - Clínica
+        * `HOSPITAL` - Hospital
+        * `OTHER` - Outro
+    Me:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+        is_verified:
+          type: boolean
+          readOnly: true
+      required:
+      - email
+      - full_name
+      - id
+      - is_verified
+      - phone
+      - role
+    MobilityLevelEnum:
+      enum:
+      - INDEPENDENT
+      - NEEDS_ASSISTANCE
+      - WHEELCHAIR
+      - BEDRIDDEN
+      type: string
+      description: |-
+        * `INDEPENDENT` - Independente
+        * `NEEDS_ASSISTANCE` - Precisa de ajuda
+        * `WHEELCHAIR` - Cadeira de rodas
+        * `BEDRIDDEN` - Acamado(a)
+    PatchedCaregiverElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo Caregiver ↔ Elder.
+
+        Segurança:
+        - caregiver é read_only e vem do usuário logado (CaregiverProfile).
+      properties:
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status344Enum'
+        started_at:
+          type: string
+          format: date
+          nullable: true
+          title: Início
+        ended_at:
+          type: string
+          format: date
+          nullable: true
+          title: Fim
+        agreed_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor/hora acordado
+          description: Snapshot do valor combinado no vínculo (pode diferir do perfil).
+        notes:
+          type: string
+          title: Observações
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+    PatchedCaregiverMeRequest:
+      type: object
+      description: |-
+        Atualização do próprio perfil de cuidador.
+
+        Abordagem 1:
+        - care_types (read): devolve a lista de tipos cadastrados para o cuidador
+        - care_types_input (write): recebe a lista de tipos para sincronizar no banco
+      properties:
+        bio:
+          type: string
+          title: Biografia
+        experience_years:
+          type: integer
+          maximum: 32767
+          minimum: 0
+          title: Anos de experiência
+        is_available:
+          type: boolean
+          title: Disponível para contratação
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+        care_types_input:
+          type: array
+          items:
+            $ref: '#/components/schemas/CareTypesInputEnum'
+          writeOnly: true
+          description: Lista de tipos de atendimento para salvar no perfil (substitui
+            o conjunto atual).
+    PatchedElderMeRequest:
+      type: object
+      description: Serializer para o próprio idoso atualizar seu perfil.
+      properties:
+        preferred_name:
+          type: string
+          title: Nome social/preferido
+          maxLength: 150
+        birth_date:
+          type: string
+          format: date
+          nullable: true
+          title: Data de nascimento
+        gender:
+          allOf:
+          - $ref: '#/components/schemas/GenderEnum'
+          title: Gênero
+        mobility_level:
+          allOf:
+          - $ref: '#/components/schemas/MobilityLevelEnum'
+          title: Mobilidade
+        cognitive_status:
+          allOf:
+          - $ref: '#/components/schemas/CognitiveStatusEnum'
+          title: Condição cognitiva
+        has_fall_risk:
+          type: boolean
+          title: Risco de quedas
+        needs_medication_support:
+          type: boolean
+          title: Precisa de ajuda com medicação
+        requires_24h_care:
+          type: boolean
+          title: Necessita cuidado 24h
+        medical_conditions:
+          type: string
+          title: Condições médicas
+        allergies:
+          type: string
+          title: Alergias
+        medications:
+          type: string
+          title: Medicações
+        medical_notes:
+          type: string
+          title: Observações médicas
+        emergency_contact_name:
+          type: string
+          title: Contato de emergência - nome
+          maxLength: 150
+        emergency_contact_phone:
+          type: string
+          title: Contato de emergência - telefone
+          maxLength: 30
+        emergency_contact_relationship:
+          type: string
+          title: Contato de emergência - relação
+          maxLength: 60
+        is_active:
+          type: boolean
+          title: Ativo
+    PatchedInstitutionElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo Institution ↔ Elder.
+
+        Segurança:
+        - institution é read_only e vem do usuário logado (InstitutionProfile).
+      properties:
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/InstitutionElderLinkStatusEnum'
+        admitted_at:
+          type: string
+          format: date
+          nullable: true
+          title: Data de admissão
+        discharged_at:
+          type: string
+          format: date
+          nullable: true
+          title: Data de saída
+        room:
+          type: string
+          title: Quarto
+          maxLength: 30
+        bed:
+          type: string
+          title: Leito
+          maxLength: 30
+        notes:
+          type: string
+          title: Observações do vínculo
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+    PatchedInstitutionMeRequest:
+      type: object
+      description: Atualização do próprio perfil de instituição.
+      properties:
+        legal_name:
+          type: string
+          minLength: 1
+          title: Razão social
+          maxLength: 255
+        trade_name:
+          type: string
+          title: Nome fantasia
+          maxLength: 255
+        cnpj:
+          type: string
+          description: Armazene apenas números. Validação pode ser adicionada no serializer.
+          maxLength: 14
+        institution_type:
+          allOf:
+          - $ref: '#/components/schemas/InstitutionTypeEnum'
+          title: Tipo
+        capacity:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+          title: Capacidade
+        website:
+          type: string
+          format: uri
+          title: Site
+          maxLength: 200
+        address_line:
+          type: string
+          title: Endereço
+          maxLength: 255
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+        zip_code:
+          type: string
+          title: CEP
+          maxLength: 8
+        license_number:
+          type: string
+          title: Nº licença/alvará
+          maxLength: 80
+    PatchedPostUpdateRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        image:
+          type: string
+          format: binary
+          nullable: true
+        image_alt_text:
+          type: string
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/Status60eEnum'
+        visibility_scope:
+          $ref: '#/components/schemas/VisibilityScopeEnum'
+    PatchedProfessionalElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo Professional ↔ Elder.
+
+        Segurança:
+        - professional é read_only e vem do usuário logado (ProfessionalProfile).
+      properties:
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status344Enum'
+        started_at:
+          type: string
+          format: date
+          nullable: true
+          title: Início
+        ended_at:
+          type: string
+          format: date
+          nullable: true
+          title: Fim
+        agreed_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor/hora acordado
+          description: Snapshot do valor combinado no vínculo (pode diferir do perfil).
+        service_mode:
+          title: Modalidade
+          description: |-
+            Ex.: HOME, CLINIC, ONLINE. Pode ser alinhado ao enum do ProfessionalProfile futuramente.
+
+            * `HOME` - Domiciliar
+            * `CLINIC` - Em clínica
+            * `ONLINE` - Online
+            * `OTHER` - Outro
+          oneOf:
+          - $ref: '#/components/schemas/ServiceModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        goals:
+          type: string
+          title: Objetivos do acompanhamento
+          description: 'Ex.: reabilitação pós-cirurgia, ganho de mobilidade, etc.'
+        notes:
+          type: string
+          title: Observações
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+    PatchedProfessionalMeRequest:
+      type: object
+      description: Atualização do próprio perfil profissional.
+      properties:
+        profession:
+          allOf:
+          - $ref: '#/components/schemas/ProfessionEnum'
+          title: Profissão
+        council:
+          type: string
+          title: Conselho profissional
+          description: 'Ex.: CREFITO, CRP, CRM, etc.'
+          maxLength: 20
+        license_number:
+          type: string
+          title: Registro profissional
+          maxLength: 50
+        bio:
+          type: string
+          title: Biografia
+        service_mode:
+          allOf:
+          - $ref: '#/components/schemas/ServiceModeEnum'
+          title: Modalidade
+        hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor por hora
+        is_available:
+          type: boolean
+          title: Disponível para contratação
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+    PostCreateRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        image:
+          type: string
+          format: binary
+          nullable: true
+        image_alt_text:
+          type: string
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/Status60eEnum'
+        visibility_scope:
+          $ref: '#/components/schemas/VisibilityScopeEnum'
+        parent_post:
+          type: integer
+          nullable: true
+      required:
+      - text
+    PostList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          readOnly: true
+        image:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+        image_alt_text:
+          type: string
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/Status60eEnum'
+          readOnly: true
+        visibility_scope:
+          allOf:
+          - $ref: '#/components/schemas/VisibilityScopeEnum'
+          readOnly: true
+        likes_count:
+          type: integer
+          readOnly: true
+        comments_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        published_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        edited_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - comments_count
+      - created_at
+      - edited_at
+      - id
+      - image
+      - image_alt_text
+      - likes_count
+      - published_at
+      - status
+      - text
+      - updated_at
+      - visibility_scope
+    PostListSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostList'
+      required:
+      - data
+    PostUpdateRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+        image:
+          type: string
+          format: binary
+          nullable: true
+        image_alt_text:
+          type: string
+          maxLength: 255
+        status:
+          $ref: '#/components/schemas/Status60eEnum'
+        visibility_scope:
+          $ref: '#/components/schemas/VisibilityScopeEnum'
+      required:
+      - text
+    ProfessionEnum:
+      enum:
+      - PHYSIOTHERAPIST
+      - SPEECH_THERAPIST
+      - OCCUPATIONAL_THERAPIST
+      - PSYCHOLOGIST
+      - NUTRITIONIST
+      - OTHER
+      type: string
+      description: |-
+        * `PHYSIOTHERAPIST` - Fisioterapeuta
+        * `SPEECH_THERAPIST` - Fonoaudiólogo(a)
+        * `OCCUPATIONAL_THERAPIST` - Terapeuta ocupacional
+        * `PSYCHOLOGIST` - Psicólogo(a)
+        * `NUTRITIONIST` - Nutricionista
+        * `OTHER` - Outro
+    ProfessionalElderLink:
+      type: object
+      description: |-
+        Serializer do vínculo Professional ↔ Elder.
+
+        Segurança:
+        - professional é read_only e vem do usuário logado (ProfessionalProfile).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        professional:
+          type: integer
+          readOnly: true
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status344Enum'
+        started_at:
+          type: string
+          format: date
+          nullable: true
+          title: Início
+        ended_at:
+          type: string
+          format: date
+          nullable: true
+          title: Fim
+        agreed_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor/hora acordado
+          description: Snapshot do valor combinado no vínculo (pode diferir do perfil).
+        service_mode:
+          title: Modalidade
+          description: |-
+            Ex.: HOME, CLINIC, ONLINE. Pode ser alinhado ao enum do ProfessionalProfile futuramente.
+
+            * `HOME` - Domiciliar
+            * `CLINIC` - Em clínica
+            * `ONLINE` - Online
+            * `OTHER` - Outro
+          oneOf:
+          - $ref: '#/components/schemas/ServiceModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        goals:
+          type: string
+          title: Objetivos do acompanhamento
+          description: 'Ex.: reabilitação pós-cirurgia, ganho de mobilidade, etc.'
+        notes:
+          type: string
+          title: Observações
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Criado em
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Atualizado em
+      required:
+      - created_at
+      - elder
+      - id
+      - professional
+      - updated_at
+    ProfessionalElderLinkRequest:
+      type: object
+      description: |-
+        Serializer do vínculo Professional ↔ Elder.
+
+        Segurança:
+        - professional é read_only e vem do usuário logado (ProfessionalProfile).
+      properties:
+        elder:
+          type: integer
+        status:
+          $ref: '#/components/schemas/Status344Enum'
+        started_at:
+          type: string
+          format: date
+          nullable: true
+          title: Início
+        ended_at:
+          type: string
+          format: date
+          nullable: true
+          title: Fim
+        agreed_hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor/hora acordado
+          description: Snapshot do valor combinado no vínculo (pode diferir do perfil).
+        service_mode:
+          title: Modalidade
+          description: |-
+            Ex.: HOME, CLINIC, ONLINE. Pode ser alinhado ao enum do ProfessionalProfile futuramente.
+
+            * `HOME` - Domiciliar
+            * `CLINIC` - Em clínica
+            * `ONLINE` - Online
+            * `OTHER` - Outro
+          oneOf:
+          - $ref: '#/components/schemas/ServiceModeEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        goals:
+          type: string
+          title: Objetivos do acompanhamento
+          description: 'Ex.: reabilitação pós-cirurgia, ganho de mobilidade, etc.'
+        notes:
+          type: string
+          title: Observações
+        is_active:
+          type: boolean
+          default: true
+          title: Vínculo ativo
+      required:
+      - elder
+    ProfessionalMe:
+      type: object
+      description: Atualização do próprio perfil profissional.
+      properties:
+        profession:
+          allOf:
+          - $ref: '#/components/schemas/ProfessionEnum'
+          title: Profissão
+        council:
+          type: string
+          title: Conselho profissional
+          description: 'Ex.: CREFITO, CRP, CRM, etc.'
+          maxLength: 20
+        license_number:
+          type: string
+          title: Registro profissional
+          maxLength: 50
+        bio:
+          type: string
+          title: Biografia
+        service_mode:
+          allOf:
+          - $ref: '#/components/schemas/ServiceModeEnum'
+          title: Modalidade
+        hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor por hora
+        is_available:
+          type: boolean
+          title: Disponível para contratação
+        registration_verified:
+          type: boolean
+          readOnly: true
+          title: Registro verificado
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+      required:
+      - profession
+      - registration_verified
+    ProfessionalMeRequest:
+      type: object
+      description: Atualização do próprio perfil profissional.
+      properties:
+        profession:
+          allOf:
+          - $ref: '#/components/schemas/ProfessionEnum'
+          title: Profissão
+        council:
+          type: string
+          title: Conselho profissional
+          description: 'Ex.: CREFITO, CRP, CRM, etc.'
+          maxLength: 20
+        license_number:
+          type: string
+          title: Registro profissional
+          maxLength: 50
+        bio:
+          type: string
+          title: Biografia
+        service_mode:
+          allOf:
+          - $ref: '#/components/schemas/ServiceModeEnum'
+          title: Modalidade
+        hourly_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          nullable: true
+          title: Valor por hora
+        is_available:
+          type: boolean
+          title: Disponível para contratação
+        city:
+          type: string
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          title: Estado
+          maxLength: 2
+      required:
+      - profession
+    RelationshipEnum:
+      enum:
+      - CHILD
+      - SPOUSE
+      - RELATIVE
+      - LEGAL_GUARDIAN
+      - OTHER
+      type: string
+      description: |-
+        * `CHILD` - Filho(a)
+        * `SPOUSE` - Cônjuge
+        * `RELATIVE` - Parente
+        * `LEGAL_GUARDIAN` - Responsável legal
+        * `OTHER` - Outro
+    RoleEnum:
+      enum:
+      - ELDER
+      - GUARDIAN
+      - CAREGIVER
+      - INSTITUTION
+      - PROFESSIONAL
+      type: string
+      description: |-
+        * `ELDER` - Idoso
+        * `GUARDIAN` - Responsável
+        * `CAREGIVER` - Cuidador
+        * `INSTITUTION` - Instituição
+        * `PROFESSIONAL` - Profissional de saúde
+    ServiceModeEnum:
+      enum:
+      - HOME
+      - CLINIC
+      - ONLINE
+      - OTHER
+      type: string
+      description: |-
+        * `HOME` - Domiciliar
+        * `CLINIC` - Em clínica
+        * `ONLINE` - Online
+        * `OTHER` - Outro
+    SignupRequest:
+      type: object
+      description: |-
+        Cadastro básico de usuário.
+        - Cria User.
+        - Se role == ELDER, cria ElderProfile (por enquanto é o único profile existente).
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        phone:
+          type: string
+          maxLength: 30
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - email
+      - full_name
+      - password
+      - role
+    SignupResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        phone:
+          type: string
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          readOnly: true
+      required:
+      - email
+      - full_name
+      - id
+      - phone
+      - role
+    Status344Enum:
+      enum:
+      - PENDING
+      - ACTIVE
+      - ENDED
+      - CANCELLED
+      type: string
+      description: |-
+        * `PENDING` - Pendente
+        * `ACTIVE` - Ativo
+        * `ENDED` - Finalizado
+        * `CANCELLED` - Cancelado
+    Status60eEnum:
+      enum:
+      - DRAFT
+      - PUBLISHED
+      - ARCHIVED
+      - BLOCKED
+      - DELETED
+      type: string
+      description: |-
+        * `DRAFT` - Rascunho
+        * `PUBLISHED` - Publicado
+        * `ARCHIVED` - Arquivado
+        * `BLOCKED` - Bloqueado
+        * `DELETED` - Deletado
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: true
+    TokenByEmail:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    TokenByEmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    VisibilityScopeEnum:
+      enum:
+      - PUBLIC
+      - CAREGIVERS
+      - ELDERS
+      - INSTITUTIONS
+      - PROFESSIONALS
+      - GUARDIANS
+      - PRIVATE
+      type: string
+      description: |-
+        * `PUBLIC` - Público
+        * `CAREGIVERS` - Cuidadores
+        * `ELDERS` - Idosos
+        * `INSTITUTIONS` - Instituições
+        * `PROFESSIONALS` - Profissionais
+        * `GUARDIANS` - Responsáveis
+        * `PRIVATE` - Privado
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

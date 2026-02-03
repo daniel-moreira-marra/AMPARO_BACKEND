@@ -1,21 +1,23 @@
 from rest_framework.response import Response
 
 
-def error_response(*, code: str, message: str, status_code: int, details=None):
+def error_response(*, code: str, message: str, status_code: int, details=None, request_id=None):
     """
     Gera uma resposta de erro padronizada para a API.
     """
-    return Response(
-        {
-            "success": False,
-            "error": {
-                "code": code,
-                "message": message,
-                "details": details,
-            }
-        },
-        status=status_code,
-    )
+    payload = {
+        "success": False,
+        "error": {
+            "code": code,
+            "message": message,
+            "details": details,
+        }
+    }
+    
+    if request_id:
+        payload["request_id"] = request_id
+        
+    return Response(payload, status=status_code)
 
 
 def success_response(*, data, status_code: int = 200, headers=None):
