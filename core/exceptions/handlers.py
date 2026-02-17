@@ -5,7 +5,7 @@ from rest_framework import status
 from .responses import error_response
 from .codes import ErrorCode
 from .helpers import _stringify_error_detail
-from .domain import DomainException, ValidationError, PermissionDenied, NotFound
+from .domain import DomainException, ValidationError, PermissionDenied, NotFoundError, ConflictError
 
 from core.logging import get_request_id
 
@@ -22,8 +22,10 @@ def custom_exception_handler(exc, context):
             status_code = status.HTTP_400_BAD_REQUEST
         elif isinstance(exc, PermissionDenied):
             status_code = status.HTTP_403_FORBIDDEN
-        elif isinstance(exc, NotFound):
+        elif isinstance(exc, NotFoundError):
             status_code = status.HTTP_404_NOT_FOUND
+        elif isinstance(exc, ConflictError):
+            status_code = status.HTTP_409_CONFLICT
 
         return error_response(
             code=exc.code,

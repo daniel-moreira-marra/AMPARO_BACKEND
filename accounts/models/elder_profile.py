@@ -76,28 +76,28 @@ class ElderProfile(models.Model):
     # Relaçoes externas
     guardians = models.ManyToManyField(
         "accounts.GuardianProfile",
-        through="accounts.GuardianElderLink",
+        through="links.GuardianElderLink",
         related_name="elders",
         blank=True,
     )
 
     institutions = models.ManyToManyField(
         "accounts.InstitutionProfile",
-        through="accounts.InstitutionElderLink",
+        through="links.InstitutionElderLink",
         related_name="elders",
         blank=True,
     )
 
     caregivers = models.ManyToManyField(
         "accounts.CaregiverProfile",
-        through="accounts.CaregiverElderLink",
+        through="links.CaregiverElderLink",
         related_name="elders",
         blank=True,
     )
     
     professionals = models.ManyToManyField(
         "accounts.ProfessionalProfile",
-        through="accounts.ProfessionalElderLink",
+        through="links.ProfessionalElderLink",
         related_name="elders",
         blank=True,
     )

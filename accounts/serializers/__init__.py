@@ -3,26 +3,21 @@ from .me import MeSerializer
 from .signup import SignupSerializer, SignupResponseSerializer
 from .elder_me import ElderMeSerializer
 from .caregiver_me import CaregiverMeSerializer
-from .caregiver_elder_link import CaregiverElderLinkSerializer
-from .guardian_elder_link import GuardianElderLinkSerializer
+from .guardian_me import GuardianMeSerializer
 from .professional_me import ProfessionalMeSerializer
 from .institution_me import InstitutionMeSerializer
-from .institution_elder_link import InstitutionElderLinkSerializer
-from .professional_elder_link import ProfessionalElderLinkSerializer
 from .user_serializers import UpdateMeSerializer, ChangePasswordSerializer
 
-
 __all__ = [
-    "TokenByEmailSerializer", 
-    "MeSerializer", 
-    "SignupSerializer", 
+    "TokenByEmailSerializer",
+    "MeSerializer",
+    "SignupSerializer",
     "SignupResponseSerializer",
-    "ElderMeSerializer", 
-    "CaregiverMeSerializer", 
-    "CaregiverElderLinkSerializer",
-    "GuardianElderLinkSerializer",
+    "ElderMeSerializer",
+    "CaregiverMeSerializer",
+    "GuardianMeSerializer",
     "ProfessionalMeSerializer",
-    "ProfessionalElderLinkSerializer",
     "InstitutionMeSerializer",
-    "InstitutionElderLinkSerializer",
+    "UpdateMeSerializer",
+    "ChangePasswordSerializer",
 ]

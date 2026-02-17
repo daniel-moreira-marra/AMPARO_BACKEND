@@ -1,5 +1,5 @@
 from django.db import models
-from ..enums.enums import CareType
+from accounts.enums.enums import CareType
 
 
 class CaregiverElderLinkCareType(models.Model):
@@ -9,7 +9,7 @@ class CaregiverElderLinkCareType(models.Model):
     """
 
     link = models.ForeignKey(
-        "accounts.CaregiverElderLink",
+        "links.CaregiverElderLink",
         on_delete=models.CASCADE,
         related_name="care_types",
     )
@@ -18,11 +18,11 @@ class CaregiverElderLinkCareType(models.Model):
 
     class Meta:
         verbose_name = "Tipo de cuidado do vínculo"
-        verbose_name_plural = "Tipos de cuidado do vínculo"
+        verbose_name_plural = "Tipo de cuidado do vínculo"
         constraints = [
             models.UniqueConstraint(
                 fields=["link", "care_type"],
-                name="uniq_link_care_type",
+                name="uniq_link_care_type_links",
             )
         ]
 

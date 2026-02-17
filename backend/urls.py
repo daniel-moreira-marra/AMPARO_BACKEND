@@ -36,12 +36,18 @@ urlpatterns = [
 
     # Local apps
     path('api/v1/', include('core.urls.urls')),
-    path("api/v1/auth/", include("accounts.urls.urls")),
+    path("api/v1/auth/", include("accounts.urls.urls_auth")),
+
     path("api/v1/elders/", include("accounts.urls.urls_elders")),
     path("api/v1/caregivers/", include("accounts.urls.urls_caregivers")),
     path("api/v1/guardians/", include("accounts.urls.urls_guardians")),
     path("api/v1/professionals/", include("accounts.urls.urls_professionals")),
     path("api/v1/institutions/", include("accounts.urls.urls_institutions")),
+    path("api/v1/", include("links.urls")),
+
+
+
+
 
     # path("api/v1/posts/", include("posts.urls.urls_posts")),
     path("api/v1/posts/", include("posts.urls.urls_my_posts")),

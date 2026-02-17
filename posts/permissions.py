@@ -1,6 +1,6 @@
 from rest_framework import permissions
 from .enums import VisibilityScope
-from accounts.models.caregiver_elder_link import CaregiverElderLink
+from links.models import CaregiverElderLink
 from accounts.enums import UserRole
 
 class IsPostOwner(permissions.BasePermission):

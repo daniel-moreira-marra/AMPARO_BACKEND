@@ -38,7 +38,7 @@ def create_post(
         try:
             parent_post = Post.objects.get(id=parent_post_id)
         except Post.DoesNotExist:
-            raise domain_exceptions.NotFound(f"Parent post {parent_post_id} not found.")
+            raise domain_exceptions.NotFoundError(f"Parent post {parent_post_id} not found.")
 
     # Business rule: Check if author can reply to this post (e.g. if it's not deleted)
     if parent_post and parent_post.deleted_at:
@@ -71,7 +71,7 @@ def delete_post(*, actor: User, post_id: int) -> None:
     try:
         post = Post.objects.get(id=post_id)
     except Post.DoesNotExist:
-        raise domain_exceptions.NotFound(f"Post {post_id} not found.")
+        raise domain_exceptions.NotFoundError(f"Post {post_id} not found.")
 
     # Business rule: Only author or staff can delete
     if post.author != actor and not actor.is_staff:

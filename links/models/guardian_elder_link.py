@@ -9,6 +9,11 @@ class GuardianElderLink(models.Model):
         LEGAL_GUARDIAN = "LEGAL_GUARDIAN", "Responsável legal"
         OTHER = "OTHER", "Outro"
 
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pendente"
+        ACTIVE = "ACTIVE", "Ativo"
+        CANCELLED = "CANCELLED", "Cancelado"
+
     guardian = models.ForeignKey(
         "accounts.GuardianProfile",
         on_delete=models.CASCADE,
@@ -20,6 +25,8 @@ class GuardianElderLink(models.Model):
         related_name="guardian_links",
     )
 
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+
     relationship = models.CharField(max_length=30, choices=Relationship.choices, default=Relationship.OTHER)
     is_legal_guardian = models.BooleanField(default=False)
 
@@ -28,6 +35,11 @@ class GuardianElderLink(models.Model):
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         unique_together = ("guardian", "elder")
+        indexes = [
+            models.Index(fields=["elder", "status"]),
+            models.Index(fields=["guardian", "status"]),
+        ]

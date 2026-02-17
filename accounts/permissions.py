@@ -9,3 +9,23 @@ class IsGuardianRole(BasePermission):
 
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and getattr(request.user, "role", None) == "GUARDIAN")
+
+
+class IsProfessionalRole(BasePermission):
+    """
+    Permite acesso apenas para usuários com role=PROFESSIONAL.
+    """
+    message = "Apenas usuários do tipo PROFESSIONAL podem acessar este recurso."
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and getattr(request.user, "role", None) == "PROFESSIONAL")
+
+
+class IsInstitutionRole(BasePermission):
+    """
+    Permite acesso apenas para usuários com role=INSTITUTION.
+    """
+    message = "Apenas usuários do tipo INSTITUTION podem acessar este recurso."
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and getattr(request.user, "role", None) == "INSTITUTION")

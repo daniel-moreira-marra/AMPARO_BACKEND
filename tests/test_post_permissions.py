@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from posts.models import Post
 from posts.enums import VisibilityScope, PostStatus
-from accounts.models.caregiver_elder_link import CaregiverElderLink
+from links.models import CaregiverElderLink
 from accounts.models.caregiver_profile import CaregiverProfile
 from accounts.models.elder_profile import ElderProfile
 

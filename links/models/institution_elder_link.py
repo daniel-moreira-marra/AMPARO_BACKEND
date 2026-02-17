@@ -12,6 +12,7 @@ class InstitutionElderLink(models.Model):
     """
 
     class Status(models.TextChoices):
+        PENDING = "PENDING", "Pendente"
         ACTIVE = "ACTIVE", "Ativo"
         DISCHARGED = "DISCHARGED", "Alta/saída"
         TRANSFERRED = "TRANSFERRED", "Transferido"
@@ -29,7 +30,7 @@ class InstitutionElderLink(models.Model):
         related_name="elder_links",
     )
 
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
 
     admitted_at = models.DateField("data de admissão", null=True, blank=True)
     discharged_at = models.DateField("data de saída", null=True, blank=True)
@@ -52,13 +53,15 @@ class InstitutionElderLink(models.Model):
             models.Index(fields=["elder", "institution"]),
             models.Index(fields=["institution", "is_active"]),
             models.Index(fields=["elder", "is_active"]),
+            models.Index(fields=["elder", "status"]),
+            models.Index(fields=["institution", "status"]),
         ]
         constraints = [
             # Evita duplicar vínculo ativo para o mesmo par
             models.UniqueConstraint(
                 fields=["elder", "institution"],
                 condition=models.Q(is_active=True),
-                name="uniq_active_elder_institution_link",
+                name="uniq_active_elder_institution_link_new",
             )
         ]
 

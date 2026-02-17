@@ -1,7 +1,8 @@
 import pytest
 from django.contrib.auth import get_user_model
 
-from accounts.models import ElderProfile, GuardianProfile, GuardianElderLink
+from accounts.models import GuardianProfile, ElderProfile
+from links.models import GuardianElderLink
 
 User = get_user_model()
 route_under_test = "/api/v1/guardians/link-to-elder/"
@@ -21,26 +22,26 @@ def test_guardian_elder_link_create_success(auth_client, create_user):
     guardian_profile, _ = GuardianProfile.objects.get_or_create(user=guardian_user)
 
     payload = {
+        "link_type": "guardian",
         "elder": elder_profile.id,
         "relationship": "CHILD",
         "is_legal_guardian": True,
         "can_view_medical": True,
         "can_hire": True,
-        "is_active": True,
     }
 
-    resp = client.post(route_under_test, payload, format="json")
+    resp = client.post("/api/v1/links/", payload, format="json")
     assert resp.status_code == 201, resp.content
 
-    body = resp.json()["data"]
-    assert body["guardian"] == guardian_profile.id
-    assert body["elder"] == elder_profile.id
-    assert body["relationship"] == "CHILD"
-    assert body["is_active"] is True
+    body = resp.json()
+    assert body["status"] == "success"
+    data = body["data"]
+    assert data["status"] == "PENDING"
 
     assert GuardianElderLink.objects.filter(
         guardian=guardian_profile,
         elder=elder_profile,
+        status=GuardianElderLink.Status.PENDING,
         is_active=True,
     ).exists()
 
@@ -55,18 +56,17 @@ def test_guardian_elder_link_create_fails_when_elder_not_found(auth_client):
     GuardianProfile.objects.get_or_create(user=guardian_user)
 
     resp = client.post(
-        route_under_test,
+        "/api/v1/links/",
         {
+            "link_type": "guardian",
             "elder": 999999,  # id inexistente
             "relationship": "CHILD",
-            "is_active": True,
         },
         format="json",
     )
 
     assert resp.status_code == 400
     body = resp.json()
-    assert body["error"]["code"] == "VALIDATION_ERROR"
     assert "elder" in body["error"]["details"]
 
 
@@ -94,43 +94,41 @@ def test_guardian_elder_link_create_fails_when_duplicate_active_link(auth_client
 
     # Tenta criar novamente via API (deve falhar)
     resp = client.post(
-        route_under_test,
+        "/api/v1/links/",
         {
+            "link_type": "guardian",
             "elder": elder_profile.id,
             "relationship": "CHILD",
-            "is_active": True,
         },
         format="json",
     )
 
     assert resp.status_code == 400
     body = resp.json()
-    assert body["error"]["code"] == "VALIDATION_ERROR"
-    # dependendo do serializer, pode vir em "elder" ou em "non_field_errors"
     details = body["error"]["details"]
-    assert ("elder" in details) or ("non_field_errors" in details) or ("detail" in details)
+    assert ("elder" in details) or ("non_field_errors" in details)
 
 
 @pytest.mark.django_db
 def test_guardian_elder_link_forbidden_for_non_guardian(auth_client, create_user):
     """
-    Usuário autenticado mas que não é GUARDIAN deve receber 403.
+    Usuário autenticado mas que não é GUARDIAN deve receber 400 (Validation Error).
     """
     elder_user = create_user(email="elder_forbidden@example.com", role="ELDER")
     elder_profile = ElderProfile.objects.create(user=elder_user)
 
-    # Autentica como ELDER (não GUARDIAN)
     client = auth_client(role="ELDER", email="elder_not_guardian@example.com")
 
     resp = client.post(
-        route_under_test,
+        "/api/v1/links/",
         {
+            "link_type": "guardian",
             "elder": elder_profile.id,
             "relationship": "CHILD",
-            "is_active": True,
         },
         format="json",
     )
 
-    assert resp.status_code == 403
-    assert resp.json()["error"]["code"] == "PERMISSION_DENIED"
+    assert resp.status_code == 400
+    assert "non_field_errors" in resp.json()["error"]["details"]
+

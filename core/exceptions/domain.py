@@ -19,7 +19,13 @@ class PermissionDenied(DomainException):
         super().__init__(message, code, details)
 
 
-class NotFound(DomainException):
+class NotFoundError(DomainException):
     """Exception raised when a domain entity is not found."""
     def __init__(self, message: str, code: str = "not_found", details=None):
+        super().__init__(message, code, details)
+
+
+class ConflictError(DomainException):
+    """Exception raised when a conflict occurs (e.g. concurrent updates)."""
+    def __init__(self, message: str, code: str = "conflict_error", details=None):
         super().__init__(message, code, details)

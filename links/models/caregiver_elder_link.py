@@ -1,17 +1,15 @@
 from django.db import models
 
-from ..enums.enums import ServiceMode
 
-class ProfessionalElderLink(models.Model):
+class CaregiverElderLink(models.Model):
     """
-    Vínculo (contrato/atendimento) entre um profissional e um idoso.
+    Vínculo (contrato/atendimento) entre um cuidador e um idoso.
 
-    Serve para:
+    Use para:
     - histórico de atendimentos
     - status do vínculo
-    - período de acompanhamento
     - preço acordado (snapshot)
-    - modalidade do serviço
+    - período do atendimento
     """
 
     class Status(models.TextChoices):
@@ -23,10 +21,10 @@ class ProfessionalElderLink(models.Model):
     elder = models.ForeignKey(
         "accounts.ElderProfile",
         on_delete=models.CASCADE,
-        related_name="professional_links",
+        related_name="caregiver_links",
     )
-    professional = models.ForeignKey(
-        "accounts.ProfessionalProfile",
+    caregiver = models.ForeignKey(
+        "accounts.CaregiverProfile",
         on_delete=models.CASCADE,
         related_name="elder_links",
     )
@@ -45,43 +43,31 @@ class ProfessionalElderLink(models.Model):
         help_text="Snapshot do valor combinado no vínculo (pode diferir do perfil).",
     )
 
-    # Modalidade no vínculo (pode diferir do perfil)
-    service_mode = models.CharField(
-        "modalidade",
-        max_length=20,
-        blank=True,
-        choices=ServiceMode.choices,
-        help_text="Ex.: HOME, CLINIC, ONLINE. Pode ser alinhado ao enum do ProfessionalProfile futuramente.",
-    )
-
-    goals = models.TextField(
-        "objetivos do acompanhamento",
-        blank=True,
-        help_text="Ex.: reabilitação pós-cirurgia, ganho de mobilidade, etc.",
-    )
     notes = models.TextField("observações", blank=True)
-
     is_active = models.BooleanField("vínculo ativo", default=True)
 
     created_at = models.DateTimeField("criado em", auto_now_add=True)
     updated_at = models.DateTimeField("atualizado em", auto_now=True)
 
     class Meta:
-        verbose_name = "Vínculo idoso-profissional"
-        verbose_name_plural = "Vínculos idoso-profissional"
+        verbose_name = "Vínculo idoso-cuidador"
+        verbose_name_plural = "Vínculos idoso-cuidador"
         indexes = [
             models.Index(fields=["elder", "is_active"]),
-            models.Index(fields=["professional", "is_active"]),
+            models.Index(fields=["caregiver", "is_active"]),
             models.Index(fields=["status"]),
+            # Melhora performance para busca de solicitações pendentes/ativas por perfis
+            models.Index(fields=["elder", "status"]),
+            models.Index(fields=["caregiver", "status"]),
         ]
         constraints = [
             # Evita dois vínculos ativos para o mesmo par (permite histórico)
             models.UniqueConstraint(
-                fields=["elder", "professional"],
+                fields=["elder", "caregiver"],
                 condition=models.Q(is_active=True),
-                name="uniq_active_elder_professional_link",
+                name="uniq_active_elder_caregiver_link_new",
             )
         ]
 
     def __str__(self) -> str:
-        return f"{self.elder.user.email} ↔ {self.professional.user.email} ({self.status})"
+        return f"{self.elder.user.email} ↔ {self.caregiver.user.email} ({self.status})"

@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from accounts.models.caregiver_profile import CaregiverProfile
 from accounts.models.elder_profile import ElderProfile
-from accounts.models.caregiver_elder_link import CaregiverElderLink
+from links.models import CaregiverElderLink
 from posts.models.posts import Post
 from posts.enums import VisibilityScope, PostStatus
 from accounts.enums import UserRole
