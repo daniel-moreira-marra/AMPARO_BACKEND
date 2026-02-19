@@ -10,6 +10,7 @@ from ..docs import token_by_email_docs
 
 class TokenByEmailView(APIView):
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     @token_by_email_docs()
     def post(self, request):
