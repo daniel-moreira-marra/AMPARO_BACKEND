@@ -77,3 +77,8 @@ ERROR_404_NOT_FOUND = OpenApiResponse(
     response=BaseErrorResponseSerializer,
     description="Recurso não encontrado.",
 )
+
+ERROR_409_CONFLICT = OpenApiResponse(
+    response=BaseErrorResponseSerializer,
+    description="Conflito de estado da requisição.",
+)

@@ -6,6 +6,8 @@ from .post_endpoints import (
     schema_posts_update,
     schema_posts_partial_update,
     schema_posts_destroy,
+    schema_posts_like_create,
+    schema_posts_unlike_delete,
 )
 
 from .feed_endpoints import (
@@ -19,5 +21,7 @@ __all__ = [
     "schema_posts_update",
     "schema_posts_partial_update",
     "schema_posts_destroy",
+    "schema_posts_like_create",
+    "schema_posts_unlike_delete",
     "schema_feed_list",
 ]

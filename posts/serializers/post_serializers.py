@@ -90,3 +90,11 @@ class PostUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+class PostLikeResponseSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    post_id = serializers.IntegerField()
+    user_id = serializers.IntegerField()
+    likes_count = serializers.IntegerField()
+    created_at = serializers.DateTimeField()

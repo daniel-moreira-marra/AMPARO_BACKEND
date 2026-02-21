@@ -1,17 +1,19 @@
 from rest_framework import serializers
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from drf_spectacular.utils import OpenApiExample, OpenApiResponse, extend_schema
 from core.docs.schemas import (
     get_success_response_serializer,
     ERROR_400_BAD_REQUEST,
     ERROR_401_UNAUTHORIZED,
     ERROR_403_FORBIDDEN,
     ERROR_404_NOT_FOUND,
+    ERROR_409_CONFLICT,
 )
 
 from posts.serializers.post_serializers import (
     PostListSerializer,
     PostCreateSerializer,
     PostUpdateSerializer,
+    PostLikeResponseSerializer,
 )
 
 TAG_POSTS = "Posts"
@@ -116,22 +118,73 @@ def schema_posts_destroy():
     )
 
 
-def schema_posts_like():
-    """
-    Template para o endpoint de Like (caso seja implementado).
-    """
+def schema_posts_like_create():
     return extend_schema(
         tags=[TAG_POSTS],
-        summary="Curtir/Descurtir postagem",
-        description="Alterna o estado de 'curtida' do usuário na postagem.",
+        summary="Curtir postagem",
+        description="Cria uma curtida do usuário autenticado para o post informado.",
         responses={
-            200: OpenApiResponse(
-                description="Status da curtida atualizado.",
-                examples=[
-                    OpenApiExample("Sucesso", value={"success": True, "data": {"liked": True, "likes_count": 10}})
-                ]
-            ),
+            201: get_success_response_serializer(PostLikeResponseSerializer),
+            401: ERROR_401_UNAUTHORIZED,
+            404: ERROR_404_NOT_FOUND,
+            409: ERROR_409_CONFLICT,
+        },
+        examples=[
+            OpenApiExample(
+                "Like criado",
+                value={
+                    "success": True,
+                    "data": {
+                        "id": 10,
+                        "post_id": 15,
+                        "user_id": 4,
+                        "likes_count": 21,
+                        "created_at": "2026-02-21T18:00:00Z",
+                    },
+                },
+                response_only=True,
+                status_codes=["201"],
+            )
+        ],
+    )
+
+
+def schema_posts_unlike_delete():
+    return extend_schema(
+        tags=[TAG_POSTS],
+        summary="Remover curtida de postagem",
+        description="Remove a curtida do usuário autenticado no post informado.",
+        responses={
+            204: OpenApiResponse(description="Curtida removida com sucesso."),
             401: ERROR_401_UNAUTHORIZED,
             404: ERROR_404_NOT_FOUND,
         },
+        examples=[
+            OpenApiExample(
+                "Post não encontrado",
+                value={
+                    "success": False,
+                    "error": {
+                        "code": "post_not_found",
+                        "message": "Post 999999 not found.",
+                        "details": None,
+                    },
+                },
+                response_only=True,
+                status_codes=["404"],
+            ),
+            OpenApiExample(
+                "Curtida não encontrada",
+                value={
+                    "success": False,
+                    "error": {
+                        "code": "post_like_not_found",
+                        "message": "Like for this user and post not found.",
+                        "details": None,
+                    },
+                },
+                response_only=True,
+                status_codes=["404"],
+            ),
+        ],
     )
