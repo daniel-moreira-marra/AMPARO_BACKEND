@@ -4,6 +4,12 @@ from .post_serializers import (
     PostListSerializer,
     PostLikeResponseSerializer,
 )
+from .post_comment_serializers import (
+    PostCommentCreateSerializer,
+    PostCommentUpdateSerializer,
+    PostCommentResponseSerializer,
+    PostCommentListSerializer,
+)
 from .feed_serializers import FeedPostSerializer
 
 __all__ = [
@@ -11,5 +17,9 @@ __all__ = [
     "PostUpdateSerializer",
     "PostListSerializer",
     "PostLikeResponseSerializer",
+    "PostCommentCreateSerializer",
+    "PostCommentUpdateSerializer",
+    "PostCommentResponseSerializer",
+    "PostCommentListSerializer",
     "FeedPostSerializer",
 ]
