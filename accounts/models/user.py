@@ -36,6 +36,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     full_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=30, blank=True)
+    address_line = models.CharField("endereço", max_length=255, blank=True)
+    city = models.CharField("cidade", max_length=120, blank=True)
+    state = models.CharField("estado", max_length=2, blank=True)
+    zip_code = models.CharField("CEP", max_length=8, blank=True)
 
     role = models.CharField(max_length=20, choices=UserRole.choices)
 

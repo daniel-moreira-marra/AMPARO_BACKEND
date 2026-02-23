@@ -2210,22 +2210,6 @@ components:
           format: uri
           title: Site
           maxLength: 200
-        address_line:
-          type: string
-          title: Endereço
-          maxLength: 255
-        city:
-          type: string
-          title: Cidade
-          maxLength: 120
-        state:
-          type: string
-          title: Estado
-          maxLength: 2
-        zip_code:
-          type: string
-          title: CEP
-          maxLength: 8
         license_number:
           type: string
           title: Nº licença/alvará
@@ -2269,22 +2253,6 @@ components:
           format: uri
           title: Site
           maxLength: 200
-        address_line:
-          type: string
-          title: Endereço
-          maxLength: 255
-        city:
-          type: string
-          title: Cidade
-          maxLength: 120
-        state:
-          type: string
-          title: Estado
-          maxLength: 2
-        zip_code:
-          type: string
-          title: CEP
-          maxLength: 8
         license_number:
           type: string
           title: Nº licença/alvará
@@ -2321,6 +2289,26 @@ components:
         phone:
           type: string
           readOnly: true
+        address_line:
+          type: string
+          readOnly: true
+          title: Endereço
+          maxLength: 255
+        city:
+          type: string
+          readOnly: true
+          title: Cidade
+          maxLength: 120
+        state:
+          type: string
+          readOnly: true
+          title: Estado
+          maxLength: 2
+        zip_code:
+          type: string
+          readOnly: true
+          title: CEP
+          maxLength: 8
         role:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
@@ -2333,6 +2321,10 @@ components:
       - full_name
       - id
       - is_verified
+      - address_line
+      - city
+      - state
+      - zip_code
       - phone
       - role
     MobilityLevelEnum:
@@ -2548,22 +2540,6 @@ components:
           format: uri
           title: Site
           maxLength: 200
-        address_line:
-          type: string
-          title: Endereço
-          maxLength: 255
-        city:
-          type: string
-          title: Cidade
-          maxLength: 120
-        state:
-          type: string
-          title: Estado
-          maxLength: 2
-        zip_code:
-          type: string
-          title: CEP
-          maxLength: 8
         license_number:
           type: string
           title: Nº licença/alvará
@@ -3090,6 +3066,18 @@ components:
         phone:
           type: string
           maxLength: 30
+        address_line:
+          type: string
+          maxLength: 255
+        city:
+          type: string
+          maxLength: 120
+        state:
+          type: string
+          maxLength: 2
+        zip_code:
+          type: string
+          maxLength: 8
         role:
           $ref: '#/components/schemas/RoleEnum'
       required:
@@ -3113,6 +3101,18 @@ components:
         phone:
           type: string
           readOnly: true
+        address_line:
+          type: string
+          readOnly: true
+        city:
+          type: string
+          readOnly: true
+        state:
+          type: string
+          readOnly: true
+        zip_code:
+          type: string
+          readOnly: true
         role:
           allOf:
           - $ref: '#/components/schemas/RoleEnum'
@@ -3121,6 +3121,10 @@ components:
       - email
       - full_name
       - id
+      - address_line
+      - city
+      - state
+      - zip_code
       - phone
       - role
     Status344Enum:

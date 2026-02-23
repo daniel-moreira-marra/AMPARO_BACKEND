@@ -1,10 +1,11 @@
 from django.db import transaction
 from django.contrib.auth import get_user_model, password_validation
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 
 from core.exceptions import domain as domain_exceptions
 from core.events import dispatch
 from accounts.models import ElderProfile, CaregiverProfile, GuardianProfile, InstitutionProfile, ProfessionalProfile
+from accounts.services.user_normalization import normalize_user_contact_address
 
 User = get_user_model()
 
@@ -16,7 +17,12 @@ def register_user(*, data: Dict[str, Any]) -> User:
     email = data.get("email")
     password = data.get("password")
     full_name = data.get("full_name")
-    phone = data.get("phone", "")
+    normalized_contact_address = normalize_user_contact_address(data, partial=False)
+    phone = normalized_contact_address["phone"]
+    address_line = data.get("address_line", "")
+    city = data.get("city", "")
+    state = normalized_contact_address["state"]
+    zip_code = normalized_contact_address["zip_code"]
     role = data.get("role")
 
     if not email:
@@ -36,7 +42,11 @@ def register_user(*, data: Dict[str, Any]) -> User:
         password=password,
         full_name=full_name,
         phone=phone,
-        role=role
+        role=role,
+        address_line=address_line,
+        city=city,
+        state=state,
+        zip_code=zip_code,
     )
 
     # Create profile based on role
@@ -64,12 +74,26 @@ def update_user_profile(*, user: User, data: Dict[str, Any]) -> User:
     Service to update basic user profile information.
     """
     full_name = data.get("full_name")
-    phone = data.get("phone")
+    normalized_contact_address = normalize_user_contact_address(data, partial=True)
+
+    phone = normalized_contact_address.get("phone")
+    address_line = data.get("address_line")
+    city = data.get("city")
+    state = normalized_contact_address.get("state")
+    zip_code = normalized_contact_address.get("zip_code")
 
     if full_name is not None:
         user.full_name = full_name
     if phone is not None:
         user.phone = phone
+    if address_line is not None:
+        user.address_line = address_line
+    if city is not None:
+        user.city = city
+    if state is not None:
+        user.state = state
+    if zip_code is not None:
+        user.zip_code = zip_code
 
     user.save()
 

@@ -16,10 +16,6 @@ class InstitutionMeSerializer(serializers.ModelSerializer):
             "institution_type",
             "capacity",
             "website",
-            "address_line",
-            "city",
-            "state",
-            "zip_code",
             "license_number",
             "is_verified",
         )

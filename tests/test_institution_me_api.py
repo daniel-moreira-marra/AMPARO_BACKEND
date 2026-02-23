@@ -35,8 +35,6 @@ def test_institution_me_get_creates_profile(auth_client):
     body = resp.json()["data"]
     # Campos mínimos esperados no response (ajuste conforme seu serializer)
     assert "legal_name" in body
-    assert "city" in body
-    assert "state" in body
 
 
 @pytest.mark.django_db
@@ -52,8 +50,6 @@ def test_institution_me_patch_updates_fields(auth_client):
             "legal_name": "Casa Serena LTDA",
             "trade_name": "Casa Serena",
             "capacity": 30,
-            "city": "São Paulo",
-            "state": "SP",
         },
         format="json",
     )
@@ -63,15 +59,11 @@ def test_institution_me_patch_updates_fields(auth_client):
     assert body["legal_name"] == "Casa Serena LTDA"
     assert body["trade_name"] == "Casa Serena"
     assert body["capacity"] == 30
-    assert body["city"] == "São Paulo"
-    assert body["state"] == "SP"
 
     profile = InstitutionProfile.objects.get(user__email="inst2@example.com")
     assert profile.legal_name == "Casa Serena LTDA"
     assert profile.trade_name == "Casa Serena"
     assert profile.capacity == 30
-    assert profile.city == "São Paulo"
-    assert profile.state == "SP"
 
 
 @pytest.mark.django_db

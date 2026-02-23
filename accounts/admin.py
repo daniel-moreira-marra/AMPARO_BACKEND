@@ -18,7 +18,7 @@ class UserAdmin(DjangoUserAdmin):
 
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Dados", {"fields": ("full_name", "phone", "role", "is_verified")}),
+        ("Dados", {"fields": ("full_name", "phone", "address_line", "city", "state", "zip_code", "role", "is_verified")}),
         ("Permissões", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Datas", {"fields": ("last_login",)}),
     )
@@ -26,7 +26,7 @@ class UserAdmin(DjangoUserAdmin):
     add_fieldsets = (
         (None, {
             "classes": ("wide",),
-            "fields": ("email", "full_name", "phone", "role", "password1", "password2", "is_staff", "is_active"),
+            "fields": ("email", "full_name", "phone", "address_line", "city", "state", "zip_code", "role", "password1", "password2", "is_staff", "is_active"),
         }),
     )
 

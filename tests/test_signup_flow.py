@@ -1,5 +1,9 @@
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
+
+User = get_user_model()
+
 
 @pytest.mark.django_db
 def test_signup_then_login_then_me():
@@ -12,7 +16,7 @@ def test_signup_then_login_then_me():
             "email": "idoso1@example.com",
             "password": "UmaSenhaForte@123",
             "full_name": "Idoso Exemplo",
-            "phone": "11999990000",
+            "phone": "(11) 99999-0000",
             "role": "ELDER",
         },
         format="json",
@@ -22,6 +26,10 @@ def test_signup_then_login_then_me():
     assert signup_body["success"] is True
     assert signup_body["data"]["email"] == "idoso1@example.com"
     assert signup_body["data"]["role"] == "ELDER"
+    assert signup_body["data"]["phone"] == "11999990000"
+
+    user = User.objects.get(email="idoso1@example.com")
+    assert user.phone == "11999990000"
 
     # 2) Login por e-mail (ajuste conforme sua rota/serializer de token)
     token_resp = client.post(

@@ -4,9 +4,13 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class UpdateMeSerializer(serializers.ModelSerializer):
+    phone = serializers.CharField(max_length=40, required=False, allow_blank=True)
+    state = serializers.CharField(max_length=10, required=False, allow_blank=True)
+    zip_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
+
     class Meta:
         model = User
-        fields = ("full_name", "phone")
+        fields = ("full_name", "phone", "address_line", "city", "state", "zip_code")
 
 
 class ChangePasswordSerializer(serializers.Serializer):

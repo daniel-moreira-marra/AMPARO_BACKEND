@@ -42,12 +42,6 @@ class InstitutionProfile(models.Model):
     capacity = models.PositiveIntegerField("capacidade", null=True, blank=True)
     website = models.URLField("site", blank=True)
 
-    # Endereço simplificado (pode virar model Address depois)
-    address_line = models.CharField("endereço", max_length=255, blank=True)
-    city = models.CharField("cidade", max_length=120, blank=True)
-    state = models.CharField("estado", max_length=2, blank=True)
-    zip_code = models.CharField("CEP", max_length=8, blank=True)
-
     # Compliance / licenças (se existir)
     license_number = models.CharField("nº licença/alvará", max_length=80, blank=True)
     is_verified = models.BooleanField("instituição verificada", default=False)
