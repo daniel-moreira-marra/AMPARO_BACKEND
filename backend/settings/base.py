@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "accounts",
     "posts",
     "links",
+    "search",
 ]
 
 MIDDLEWARE = [
