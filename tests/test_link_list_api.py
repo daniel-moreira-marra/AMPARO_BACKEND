@@ -109,3 +109,47 @@ class TestLinkList:
         resp = client.get(ROUTE)
         assert resp.status_code == 200
         assert len(resp.json()) == 0
+
+    def test_retrieve_links_by_user_id(self, auth_client, elder_setup, caregiver_setup, guardian_setup):
+        elder_user, elder_profile = elder_setup
+        cg_user, cg_profile = caregiver_setup
+        gd_user, gd_profile = guardian_setup
+
+        CaregiverElderLink.objects.create(
+            caregiver=cg_profile, 
+            elder=elder_profile, 
+            status="ACTIVE"
+        )
+        GuardianElderLink.objects.create(
+            guardian=gd_profile, 
+            elder=elder_profile, 
+            status="PENDING",
+            relationship="Child"
+        )
+        CaregiverElderLink.objects.create(
+            caregiver=cg_profile, 
+            elder=elder_profile, 
+            status="ENDED",
+            is_active=False
+        )
+
+        # Login as another user (maybe even admin or oneself) to request links of the elder user
+        client = auth_client(role="GUARDIAN", email=gd_user.email)
+        resp = client.get(f"{ROUTE}{elder_user.id}/")
+        
+        assert resp.status_code == 200
+        data = resp.json()
+        
+        # Only ACTIVE or ENDED links should be retrieved.
+        # PENDING should be ignored.
+        assert len(data) == 2
+        
+        statuses = [item['status'] for item in data]
+        assert "ACTIVE" in statuses
+        assert "ENDED" in statuses
+        assert "PENDING" not in statuses
+
+        # The other party relative to the elder user is the caregiver
+        for item in data:
+            assert item['other_party_role'] == 'Cuidador'
+            assert item['link_type'] == 'caregiver'

@@ -171,7 +171,7 @@ class LinkListSerializer(serializers.Serializer):
         # Precisamos saber o contexto (quem está pedindo) para saber quem é o "outro"
         # Mas como o serializer é agnóstico, vamos tentar inferir ou passar context
         
-        user = self.context.get('request').user
+        user = self.context.get('target_user', self.context.get('request').user)
         
         # Se o user é o Elder do link, o "other" é o profissional/cuidador
         if hasattr(obj, 'elder') and obj.elder.user == user:
@@ -191,7 +191,7 @@ class LinkListSerializer(serializers.Serializer):
         return "N/A"
 
     def get_other_party_id(self, obj):
-        user = self.context.get('request').user
+        user = self.context.get('target_user', self.context.get('request').user)
         
         # Se o user é o Elder do link, o "other" é o profissional/cuidador/etc
         if hasattr(obj, 'elder') and obj.elder.user == user:

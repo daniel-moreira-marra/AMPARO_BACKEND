@@ -42,7 +42,7 @@ class LinkViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action in ['list', 'retrieve']:
             return LinkListSerializer
         elif self.action == 'respond':
             return LinkRespondSerializer
@@ -96,6 +96,57 @@ class LinkViewSet(viewsets.GenericViewSet):
         links.sort(key=lambda x: x.created_at, reverse=True)
 
         serializer = self.get_serializer(links, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        summary="Listar vínculos de uma pessoa",
+        description="Retorna uma lista de vínculos ativos ou finalizados associados a uma pessoa específica (pelo ID do usuário).",
+        responses={200: LinkListSerializer(many=True)}
+    )
+    def retrieve(self, request, pk=None, *args, **kwargs):
+        from django.contrib.auth import get_user_model
+        from django.shortcuts import get_object_or_404
+        User = get_user_model()
+        target_user = get_object_or_404(User, id=pk)
+
+        links = []
+        
+        # Helper para anotar o tipo de link e filtrar
+        def annotate_type_and_filter(queryset, type_name, role_name):
+            filtered_qs = queryset.filter(status__in=['ACTIVE', 'ENDED'])
+            for link in filtered_qs:
+                link.link_type = type_name
+                link.other_party_role = role_name
+                links.append(link)
+
+        # Se for Elder
+        if hasattr(target_user, 'elder_profile'):
+            annotate_type_and_filter(target_user.elder_profile.caregiver_links.all(), 'caregiver', 'Cuidador')
+            annotate_type_and_filter(target_user.elder_profile.guardian_links.all(), 'guardian', 'Responsável')
+            annotate_type_and_filter(target_user.elder_profile.professional_links.all(), 'professional', 'Profissional')
+            annotate_type_and_filter(target_user.elder_profile.institution_links.all(), 'institution', 'Instituição')
+
+        # Se for Caregiver
+        if hasattr(target_user, 'caregiver_profile'):
+            annotate_type_and_filter(target_user.caregiver_profile.elder_links.all(), 'caregiver', 'Idoso')
+
+        # Se for Guardian
+        if hasattr(target_user, 'guardian_profile'):
+            annotate_type_and_filter(target_user.guardian_profile.elder_links.all(), 'guardian', 'Idoso')
+
+        # Se for Professional
+        if hasattr(target_user, 'professional_profile'):
+            annotate_type_and_filter(target_user.professional_profile.elder_links.all(), 'professional', 'Idoso')
+
+        # Se for Institution
+        if hasattr(target_user, 'institution_profile'):
+            annotate_type_and_filter(target_user.institution_profile.elder_links.all(), 'institution', 'Idoso')
+
+        # Ordenar por data de criação (mais recente primeiro)
+        links.sort(key=lambda x: x.created_at, reverse=True)
+
+        # Usar o context={'request': request, 'target_user': target_user} para informar ao serializer
+        serializer = self.get_serializer(links, many=True, context={'request': request, 'target_user': target_user})
         return Response(serializer.data)
 
     @extend_schema(
