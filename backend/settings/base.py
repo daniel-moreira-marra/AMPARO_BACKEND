@@ -1,14 +1,19 @@
-from pathlib import Path
+import environ
 import os
-from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv(override=True)
+env = environ.Env(
+    DEBUG=(bool, False),
+    DJANGO_ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"])
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "change-me")
-DEBUG = os.getenv("DEBUG", "False") == "True"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
+SECRET_KEY = env("DJANGO_SECRET_KEY")
+DEBUG = env("DEBUG")
+ALLOWED_HOSTS = env("DJANGO_ALLOWED_HOSTS")
 
 
 INSTALLED_APPS = [
@@ -73,6 +78,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") # Essencial para Docker
+# Isso permite que o Django comprima e faça cache dos arquivos
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
