@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "posts",
     "links",
     "search",
+    "storages",
 ]
 
 MIDDLEWARE = [

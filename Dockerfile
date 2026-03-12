@@ -21,7 +21,7 @@ COPY . .
 # (Em produção, as migrações costumam ser um passo separado no CI/CD)
 
 # prod
-# CMD ["gunicorn", "--bind", "0.0.0.0:8000", "core.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "backend.wsgi:application"]
 
 # dev
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

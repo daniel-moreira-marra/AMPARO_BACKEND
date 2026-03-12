@@ -32,7 +32,9 @@ def create_post(
 
     visibility_scope = data.get("visibility_scope", VisibilityScope.PUBLIC)
     parent_post_id = data.get("parent_post_id")
-    
+    image = data.get("image")
+    image_alt_text = data.get("image_alt_text", "")
+
     parent_post = None
     if parent_post_id:
         try:
@@ -47,6 +49,8 @@ def create_post(
     post = Post.objects.create(
         author=actor,
         text=text,
+        image=image,
+        image_alt_text=image_alt_text,
         visibility_scope=visibility_scope,
         parent_post=parent_post,
         published_at=timezone.now(),
