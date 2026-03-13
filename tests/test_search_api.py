@@ -36,7 +36,8 @@ def test_search_no_params_returns_success(api_client):
     assert resp.status_code == 200
     body = resp.json()
     assert body["success"] is True
-    assert "count" in body["data"]
+    assert "next" in body["data"]
+    assert "previous" in body["data"]
     assert "results" in body["data"]
 
 
@@ -141,7 +142,6 @@ def test_search_no_match_returns_empty(api_client):
     resp = api_client.get(URL, {"role": "PROFESSIONAL", "q": "XKCD_TERM_NAO_EXISTE_123"})
     assert resp.status_code == 200
     data = resp.json()["data"]
-    assert data["count"] == 0
     assert data["results"] == []
 
 
@@ -171,7 +171,7 @@ def test_search_global_flat_list_has_role_key(api_client):
     resp = api_client.get(URL, {"q": "Global"})
     assert resp.status_code == 200
     data = resp.json()["data"]
-    assert data["count"] >= 2
+    assert len(data["results"]) >= 2
     roles_present = {r["role"] for r in data["results"]}
     assert "PROFESSIONAL" in roles_present
     assert "ELDER" in roles_present

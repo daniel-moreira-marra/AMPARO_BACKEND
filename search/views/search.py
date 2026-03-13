@@ -2,14 +2,9 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.views import APIView
 
-from accounts.models import (
-    ElderProfile,
-    GuardianProfile,
-    CaregiverProfile,
-    ProfessionalProfile,
-    InstitutionProfile,
-)
+from accounts.models import User
 from core.exceptions.responses import success_response, error_response
+from core.pagination.feed_cursor_pagination import FeedCursorPagination
 
 from ..serializers import (
     ElderSearchSerializer,
@@ -24,132 +19,128 @@ from ..docs import search_get_docs
 VALID_ROLES = ["ELDER", "GUARDIAN", "CAREGIVER", "PROFESSIONAL", "INSTITUTION"]
 
 
-def _search_elders(q: str, params: dict) -> list:
-    qs = ElderProfile.objects.select_related("user").filter(user__is_active=True)
+def _build_elders_q(q: str, params: dict) -> Q:
+    query = Q(role="ELDER")
     if q:
-        qs = qs.filter(
-            Q(user__full_name__icontains=q) | Q(preferred_name__icontains=q)
-        )
+        query &= (Q(full_name__icontains=q) | Q(elder_profile__preferred_name__icontains=q))
     city = params.get("city", "").strip()
     if city:
-        qs = qs.filter(user__city__icontains=city)
+        query &= Q(city__icontains=city)
     state = params.get("state", "").strip()
     if state:
-        qs = qs.filter(user__state__iexact=state)
-    return ElderSearchSerializer(qs, many=True).data
+        query &= Q(state__iexact=state)
+    return query
 
 
-def _search_guardians(q: str, params: dict) -> list:
-    qs = GuardianProfile.objects.select_related("user").filter(user__is_active=True)
+def _build_guardians_q(q: str, params: dict) -> Q:
+    query = Q(role="GUARDIAN")
     if q:
-        qs = qs.filter(Q(user__full_name__icontains=q))
+        query &= Q(full_name__icontains=q)
     city = params.get("city", "").strip()
     if city:
-        qs = qs.filter(user__city__icontains=city)
+        query &= Q(city__icontains=city)
     state = params.get("state", "").strip()
     if state:
-        qs = qs.filter(user__state__iexact=state)
-    return GuardianSearchSerializer(qs, many=True).data
+        query &= Q(state__iexact=state)
+    return query
 
 
-def _search_caregivers(q: str, params: dict) -> list:
-    qs = CaregiverProfile.objects.select_related("user").filter(user__is_active=True)
+def _build_caregivers_q(q: str, params: dict) -> Q:
+    query = Q(role="CAREGIVER")
     if q:
-        qs = qs.filter(
-            Q(user__full_name__icontains=q) | Q(bio__icontains=q)
-        )
+        query &= (Q(full_name__icontains=q) | Q(caregiver_profile__bio__icontains=q))
     city = params.get("city", "").strip()
     if city:
-        qs = qs.filter(Q(city__icontains=city) | Q(user__city__icontains=city))
+        query &= (Q(caregiver_profile__city__icontains=city) | Q(city__icontains=city))
     state = params.get("state", "").strip()
     if state:
-        qs = qs.filter(Q(state__iexact=state) | Q(user__state__iexact=state))
+        query &= (Q(caregiver_profile__state__iexact=state) | Q(state__iexact=state))
         
     is_available = params.get("is_available")
     if is_available is not None:
         if str(is_available).lower() in ['true', '1', 't', 'y', 'yes', 'on']:
-            qs = qs.filter(is_available=True)
+            query &= Q(caregiver_profile__is_available=True)
         elif str(is_available).lower() in ['false', '0', 'f', 'n', 'no', 'off']:
-            qs = qs.filter(is_available=False)
+            query &= Q(caregiver_profile__is_available=False)
             
     experience_years = params.get("experience_years")
     if experience_years:
         try:
-           qs = qs.filter(experience_years__gte=int(experience_years))
+           query &= Q(caregiver_profile__experience_years__gte=int(experience_years))
         except (ValueError, TypeError):
            pass
-    return CaregiverSearchSerializer(qs, many=True).data
+    return query
 
 
-def _search_professionals(q: str, params: dict) -> list:
-    qs = ProfessionalProfile.objects.select_related("user").filter(user__is_active=True)
+def _build_professionals_q(q: str, params: dict) -> Q:
+    query = Q(role="PROFESSIONAL")
     if q:
-        qs = qs.filter(
-            Q(user__full_name__icontains=q)
-            | Q(bio__icontains=q)
-            | Q(profession__icontains=q)
+        query &= (
+            Q(full_name__icontains=q)
+            | Q(professional_profile__bio__icontains=q)
+            | Q(professional_profile__profession__icontains=q)
         )
     city = params.get("city", "").strip()
     if city:
-        qs = qs.filter(Q(city__icontains=city) | Q(user__city__icontains=city))
+        query &= (Q(professional_profile__city__icontains=city) | Q(city__icontains=city))
     state = params.get("state", "").strip()
     if state:
-        qs = qs.filter(Q(state__iexact=state) | Q(user__state__iexact=state))
+        query &= (Q(professional_profile__state__iexact=state) | Q(state__iexact=state))
         
     is_available = params.get("is_available")
     if is_available is not None:
         if str(is_available).lower() in ['true', '1', 't', 'y', 'yes', 'on']:
-            qs = qs.filter(is_available=True)
+            query &= Q(professional_profile__is_available=True)
         elif str(is_available).lower() in ['false', '0', 'f', 'n', 'no', 'off']:
-            qs = qs.filter(is_available=False)
+            query &= Q(professional_profile__is_available=False)
             
     profession = params.get("profession", "").strip()
     if profession:
-        qs = qs.filter(profession__iexact=profession)
+        query &= Q(professional_profile__profession__iexact=profession)
         
     service_mode = params.get("service_mode", "").strip()
     if service_mode:
-        qs = qs.filter(service_mode__iexact=service_mode)
+        query &= Q(professional_profile__service_mode__iexact=service_mode)
 
     min_price = params.get("min_price")
     if min_price is not None:
         try:
-           qs = qs.filter(hourly_rate__gte=float(min_price))
+           query &= Q(professional_profile__hourly_rate__gte=float(min_price))
         except (ValueError, TypeError):
            pass
            
     max_price = params.get("max_price")
     if max_price is not None:
         try:
-           qs = qs.filter(hourly_rate__lte=float(max_price))
+           query &= Q(professional_profile__hourly_rate__lte=float(max_price))
         except (ValueError, TypeError):
            pass
-    return ProfessionalSearchSerializer(qs, many=True).data
+    return query
 
 
-def _search_institutions(q: str, params: dict) -> list:
-    qs = InstitutionProfile.objects.select_related("user").filter(user__is_active=True)
+def _build_institutions_q(q: str, params: dict) -> Q:
+    query = Q(role="INSTITUTION")
     if q:
-        qs = qs.filter(
-            Q(user__full_name__icontains=q)
-            | Q(legal_name__icontains=q)
-            | Q(trade_name__icontains=q)
+        query &= (
+            Q(full_name__icontains=q)
+            | Q(institution_profile__legal_name__icontains=q)
+            | Q(institution_profile__trade_name__icontains=q)
         )
     city = params.get("city", "").strip()
     if city:
-        qs = qs.filter(user__city__icontains=city)
+        query &= Q(city__icontains=city)
     state = params.get("state", "").strip()
     if state:
-        qs = qs.filter(user__state__iexact=state)
-    return InstitutionSearchSerializer(qs, many=True).data
+        query &= Q(state__iexact=state)
+    return query
 
 
-_ROLE_HANDLERS = {
-    "ELDER": _search_elders,
-    "GUARDIAN": _search_guardians,
-    "CAREGIVER": _search_caregivers,
-    "PROFESSIONAL": _search_professionals,
-    "INSTITUTION": _search_institutions,
+_ROLE_Q_BUILDERS = {
+    "ELDER": _build_elders_q,
+    "GUARDIAN": _build_guardians_q,
+    "CAREGIVER": _build_caregivers_q,
+    "PROFESSIONAL": _build_professionals_q,
+    "INSTITUTION": _build_institutions_q,
 }
 
 
@@ -162,12 +153,10 @@ class SearchView(APIView):
                               Aceita: ELDER, GUARDIAN, CAREGIVER, PROFESSIONAL, INSTITUTION.
         q    (str, opcional): Texto a pesquisar em campos relevantes ao tipo.
 
-    Retorno quando `role` é informado:
-        { "success": true, "data": { "role": "PROFESSIONAL", "count": N, "results": [...] } }
-
-    Retorno quando `role` é omitido (lista plana com discriminador `role` por item):
-        { "success": true, "data": { "count": N, "results": [...] } }
+    Retorna resultados paginados usando cursor pagination.
     """
+    
+    pagination_class = FeedCursorPagination
 
     @search_get_docs()
     def get(self, request):
@@ -185,25 +174,46 @@ class SearchView(APIView):
                 status_code=status.HTTP_400_BAD_REQUEST,
             )
 
+        base_query = Q(is_active=True)
         if role:
-            handler = _ROLE_HANDLERS[role]
-            results = handler(q, request.query_params)
-            return success_response(
-                data={
-                    "role": role,
-                    "count": len(results),
-                    "results": results,
-                }
-            )
+            base_query &= _ROLE_Q_BUILDERS[role](q, request.query_params)
+        else:
+            combined_roles_q = Q()
+            for r, builder in _ROLE_Q_BUILDERS.items():
+                combined_roles_q |= builder(q, request.query_params)
+            base_query &= combined_roles_q
 
-        # Busca em todos os tipos → lista plana
-        all_results = []
-        for r, handler in _ROLE_HANDLERS.items():
-            all_results.extend(handler(q, request.query_params))
+        users_qs = User.objects.filter(base_query).select_related(
+            "elder_profile",
+            "guardian_profile",
+            "caregiver_profile",
+            "professional_profile",
+            "institution_profile",
+        ).order_by("-created_at")
 
-        return success_response(
-            data={
-                "count": len(all_results),
-                "results": all_results,
-            }
-        )
+        paginator = self.pagination_class()
+        paginated_users = paginator.paginate_queryset(users_qs, request, view=self)
+        
+        results = []
+        if paginated_users is not None:
+            for user in paginated_users:
+                if user.role == "ELDER" and hasattr(user, "elder_profile"):
+                    results.append(ElderSearchSerializer(user.elder_profile).data)
+                elif user.role == "GUARDIAN" and hasattr(user, "guardian_profile"):
+                    results.append(GuardianSearchSerializer(user.guardian_profile).data)
+                elif user.role == "CAREGIVER" and hasattr(user, "caregiver_profile"):
+                    results.append(CaregiverSearchSerializer(user.caregiver_profile).data)
+                elif user.role == "PROFESSIONAL" and hasattr(user, "professional_profile"):
+                    results.append(ProfessionalSearchSerializer(user.professional_profile).data)
+                elif user.role == "INSTITUTION" and hasattr(user, "institution_profile"):
+                    results.append(InstitutionSearchSerializer(user.institution_profile).data)
+
+        data = {
+            "next": paginator.get_next_link(),
+            "previous": paginator.get_previous_link(),
+            "results": results,
+        }
+        if role:
+            data["role"] = role
+
+        return success_response(data=data)
