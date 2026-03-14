@@ -3,8 +3,7 @@ from .base import *  # noqa
 
 DEBUG = False
 
-# Em produção, defina exatamente seus domínios
-# ALLOWED_HOSTS = ["api.seudominio.com"]
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
 # CORS: defina apenas o domínio do frontend
 # CORS_ALLOWED_ORIGINS = ["https://seudominio.com"]
