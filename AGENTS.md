@@ -31,3 +31,5 @@
 - Settings load `.env` via `python-dotenv` (`backend/settings/base.py`).
 - Key env vars: `DJANGO_SECRET_KEY`, `DEBUG`, `DJANGO_ALLOWED_HOSTS`.
 - Avoid committing real secrets; keep local overrides in `.env`.
+
+### Teste
