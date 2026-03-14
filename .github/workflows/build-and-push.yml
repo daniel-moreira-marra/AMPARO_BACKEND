@@ -1,0 +1,117 @@
+name: Build and Push Backend Image
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - '.gitignore'
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install --no-cache-dir -r requirements.txt
+
+      - name: Run tests
+        run: pytest --no-migrations -x -q
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: production
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: amparo-backend-repo
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Run Django migrations (ECS one-off task)
+        run: |
+          # Obtém a revisão mais recente da task definition
+          TASK_DEF=$(aws ecs describe-task-definition \
+            --task-definition amparo-backend \
+            --query 'taskDefinition.taskDefinitionArn' \
+            --output text)
+
+          # Obtém a subnet pública e o security group do serviço
+          SUBNET=$(aws ec2 describe-subnets \
+            --filters "Name=tag:Name,Values=amparo-private-subnet-a" \
+            --query 'Subnets[0].SubnetId' \
+            --output text)
+
+          SG=$(aws ec2 describe-security-groups \
+            --filters "Name=group-name,Values=amparo_ecs_tasks_sg" \
+            --query 'SecurityGroups[0].GroupId' \
+            --output text)
+
+          # Roda a task de migração e captura o ARN
+          TASK_ARN=$(aws ecs run-task \
+            --cluster amparo-cluster \
+            --task-definition $TASK_DEF \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[$SUBNET],securityGroups=[$SG],assignPublicIp=ENABLED}" \
+            --overrides '{"containerOverrides":[{"name":"backend","command":["python","manage.py","migrate","--noinput"]}]}' \
+            --query 'tasks[0].taskArn' \
+            --output text)
+
+          echo "Task de migração iniciada: $TASK_ARN"
+
+          # Aguarda a task de migração terminar (timeout: 5 minutos)
+          aws ecs wait tasks-stopped \
+            --cluster amparo-cluster \
+            --tasks $TASK_ARN
+
+          # Verifica se a task encerrou com sucesso (exit code 0)
+          EXIT_CODE=$(aws ecs describe-tasks \
+            --cluster amparo-cluster \
+            --tasks $TASK_ARN \
+            --query 'tasks[0].containers[0].exitCode' \
+            --output text)
+
+          if [ "$EXIT_CODE" != "0" ]; then
+            echo "Migracao falhou com exit code $EXIT_CODE"
+            exit 1
+          fi
+
+          echo "Migracao concluida com sucesso!"
+
+      - name: Force ECS service re-deploy (zero-downtime)
+        run: |
+          aws ecs update-service \
+            --cluster amparo-cluster \
+            --service amparo-backend-service \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
