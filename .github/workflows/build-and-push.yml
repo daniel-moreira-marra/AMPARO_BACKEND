@@ -68,11 +68,19 @@ jobs:
             --query 'taskDefinition.taskDefinitionArn' \
             --output text)
 
-          # Obtém a subnet pública e o security group do serviço
+          # Obtém a subnet pública (necessário para Fargate puxar imagem do ECR sem NAT Gateway)
           SUBNET=$(aws ec2 describe-subnets \
-            --filters "Name=tag:Name,Values=amparo-private-subnet-a" \
+            --filters "Name=tag:Name,Values=amparo-public-rt" \
             --query 'Subnets[0].SubnetId' \
             --output text)
+
+          # Fallback: busca qualquer subnet pública da VPC
+          if [ -z "$SUBNET" ] || [ "$SUBNET" == "None" ]; then
+            SUBNET=$(aws ec2 describe-subnets \
+              --filters "Name=cidrBlock,Values=10.0.1.0/24" \
+              --query 'Subnets[0].SubnetId' \
+              --output text)
+          fi
 
           SG=$(aws ec2 describe-security-groups \
             --filters "Name=group-name,Values=amparo_ecs_tasks_sg" \
