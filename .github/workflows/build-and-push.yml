@@ -27,6 +27,9 @@ jobs:
         run: pip install --no-cache-dir -r requirements.txt
 
       - name: Run tests
+        env:
+          DJANGO_SECRET_KEY: "ci-dummy-secret-key-not-used-in-production"
+          DJANGO_SETTINGS_MODULE: backend.settings.dev
         run: pytest --no-migrations -x -q
 
   build-and-push:
