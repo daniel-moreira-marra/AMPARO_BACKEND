@@ -5,17 +5,30 @@ DEBUG = False
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
-# CORS: defina apenas o domínio do frontend
-# CORS_ALLOWED_ORIGINS = ["https://seudominio.com"]
+# DEBUG pode ser útil em staging mas deve ser False em prod literal
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+
+# CORS e CSRF
+CORS_ALLOW_ALL_ORIGINS = os.getenv("DJANGO_ALLOWED_CORS", "") == "*"
+if not CORS_ALLOW_ALL_ORIGINS:
+    CORS_ALLOWED_ORIGINS = os.getenv("DJANGO_ALLOWED_CORS", "").split(",")
+
+CSRF_TRUSTED_ORIGINS = [
+    origin if origin.startswith("http") else f"http://{origin}"
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
+]
+
+# Se não houver nada configurado e estivermos em prod, vamos garantir o ALB pelo menos
+# Se for "*", o Django pode reclamar em algumas versões de CSRF, mas vamos seguir o .env do usuário
 
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB"),
+        "NAME": os.getenv("POSTGRES_DB", "amparo_db"),
         "USER": os.getenv("POSTGRES_USER"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
         "HOST": os.getenv("POSTGRES_HOST"),
-        "PORT": os.getenv("POSTGRES_PORT"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
     }
 }
 
@@ -23,7 +36,7 @@ DATABASES = {
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = "public-read"
 AWS_QUERYSTRING_AUTH = False
