@@ -49,3 +49,6 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# HARDENING: Desativa Swagger em produção por padrão
+ENABLE_SWAGGER = os.getenv("ENABLE_SWAGGER", "False").lower() == "true"

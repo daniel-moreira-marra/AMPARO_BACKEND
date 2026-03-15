@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 
@@ -27,13 +28,6 @@ urlpatterns = [
     # Django admin
     path('admin/', admin.site.urls),
 
-    # OpenAPI schema (JSON)
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-
-    # UIs
-    path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
-    path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
-
     # Local apps
     path('api/v1/', include('core.urls.urls')),
     path("api/v1/auth/", include("accounts.urls.urls_auth")),
@@ -46,12 +40,16 @@ urlpatterns = [
     path("api/v1/", include("links.urls")),
     path("api/v1/", include("search.urls")),
 
-
-
-
-
     # path("api/v1/posts/", include("posts.urls.urls_posts")),
     path("api/v1/posts/", include("posts.urls.urls_my_posts")),
     path("api/v1/posts/", include("posts.urls.urls_feed")),
-
 ]
+
+if settings.ENABLE_SWAGGER:
+    urlpatterns += [
+        # OpenAPI schema (JSON)
+        path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+        # UIs
+        path("api/docs/", SpectacularSwaggerView.as_view(url_name="schema"), name="swagger-ui"),
+        path("api/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"),
+    ]
