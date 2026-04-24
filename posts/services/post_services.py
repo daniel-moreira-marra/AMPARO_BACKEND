@@ -31,18 +31,11 @@ def create_post(
         raise domain_exceptions.ValidationError("Post text is required.", code="missing_text")
 
     visibility_scope = data.get("visibility_scope", VisibilityScope.PUBLIC)
-    parent_post_id = data.get("parent_post_id")
+    # DRF passes a Post instance for ForeignKey fields, not an ID
+    parent_post = data.get("parent_post")
     image = data.get("image")
     image_alt_text = data.get("image_alt_text", "")
 
-    parent_post = None
-    if parent_post_id:
-        try:
-            parent_post = Post.objects.get(id=parent_post_id)
-        except Post.DoesNotExist:
-            raise domain_exceptions.NotFoundError(f"Parent post {parent_post_id} not found.")
-
-    # Business rule: Check if author can reply to this post (e.g. if it's not deleted)
     if parent_post and parent_post.deleted_at:
         raise domain_exceptions.ValidationError("Cannot reply to a deleted post.", code="inactive_parent")
 

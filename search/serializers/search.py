@@ -15,11 +15,13 @@ class ElderSearchSerializer(serializers.ModelSerializer):
     """
     full_name = serializers.CharField(source="user.full_name", read_only=True)
     role = serializers.SerializerMethodField()
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
         model = ElderProfile
         fields = (
             "id",
+            "user_id",
             "role",
             "full_name",
             "preferred_name",
@@ -37,11 +39,13 @@ class GuardianSearchSerializer(serializers.ModelSerializer):
     """
     full_name = serializers.CharField(source="user.full_name", read_only=True)
     role = serializers.SerializerMethodField()
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
         model = GuardianProfile
         fields = (
             "id",
+            "user_id",
             "role",
             "full_name",
             "relationship",
@@ -58,11 +62,13 @@ class CaregiverSearchSerializer(serializers.ModelSerializer):
     """
     full_name = serializers.CharField(source="user.full_name", read_only=True)
     role = serializers.SerializerMethodField()
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
         model = CaregiverProfile
         fields = (
             "id",
+            "user_id",
             "role",
             "full_name",
             "bio",
@@ -83,11 +89,13 @@ class ProfessionalSearchSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source="user.full_name", read_only=True)
     role = serializers.SerializerMethodField()
     profession_display = serializers.CharField(source="get_profession_display", read_only=True)
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
         model = ProfessionalProfile
         fields = (
             "id",
+            "user_id",
             "role",
             "full_name",
             "profession",
@@ -113,11 +121,13 @@ class InstitutionSearchSerializer(serializers.ModelSerializer):
     city = serializers.CharField(source="user.city", read_only=True)
     state = serializers.CharField(source="user.state", read_only=True)
     role = serializers.SerializerMethodField()
+    user_id = serializers.IntegerField(source="user.id", read_only=True)
 
     class Meta:
         model = InstitutionProfile
         fields = (
             "id",
+            "user_id",
             "role",
             "full_name",
             "legal_name",

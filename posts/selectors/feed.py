@@ -1,5 +1,5 @@
-from django.db.models import QuerySet
-from ..models import Post
+from django.db.models import QuerySet, Exists, OuterRef
+from ..models import Post, PostLike
 from ..enums.post_status import PostStatus
 from ..enums.visibility_scope import VisibilityScope
 from accounts.enums import UserRole
@@ -12,11 +12,9 @@ def get_feed_queryset(*, user) -> QuerySet[Post]:
     """
     qs = Post.objects.filter(status=PostStatus.PUBLISHED)
 
-    # Soft delete (se existir)
     if hasattr(Post, "deleted_at"):
         qs = qs.filter(deleted_at__isnull=True)
 
-    # Visibilidade: exemplo simples (ajuste conforme seu domínio)
     allowed_scopes = [VisibilityScope.PUBLIC]
 
     role = getattr(user, "role", None)
@@ -30,13 +28,21 @@ def get_feed_queryset(*, user) -> QuerySet[Post]:
         allowed_scopes.append(VisibilityScope.INSTITUTIONS)
     elif role == UserRole.PROFESSIONAL:
         allowed_scopes.append(VisibilityScope.PROFESSIONALS)
-        
-    # Se não estiver autenticado, só PUBLIC
+
     if user is None or not getattr(user, "is_authenticated", False):
         allowed_scopes = [VisibilityScope.PUBLIC]
 
     qs = qs.filter(visibility_scope__in=allowed_scopes)
 
-    # A ordenação é aplicada pelo CursorPagination na view, não aqui
-    # Isso evita conflitos entre a ordenação do queryset e do paginador
+    # Evitar N+1 ao serializar author, parent_post e author do parent_post
+    qs = qs.select_related("author", "parent_post", "parent_post__author")
+
+    # Anotar liked_by_me para usuários autenticados (evita N+1 por post)
+    if user and getattr(user, "is_authenticated", False):
+        qs = qs.annotate(
+            _liked_by_me=Exists(
+                PostLike.objects.filter(post=OuterRef("pk"), user=user)
+            )
+        )
+
     return qs

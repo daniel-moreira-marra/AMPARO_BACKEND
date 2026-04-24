@@ -66,14 +66,10 @@ class GenericLinkSerializer(serializers.Serializer):
         elif link_type == 'guardian':
             if not hasattr(user, 'guardian_profile'):
                 raise serializers.ValidationError(_("Usuário não é um responsável."))
-            if 'relationship' not in attrs:
-                raise serializers.ValidationError({"relationship": _("Este campo é obrigatório para responsáveis.")})
 
         elif link_type == 'professional':
             if not hasattr(user, 'professional_profile'):
                 raise serializers.ValidationError(_("Usuário não é um profissional."))
-            if 'service_mode' not in attrs:
-                raise serializers.ValidationError({"service_mode": _("Este campo é obrigatório para profissionais.")})
 
         elif link_type == 'institution':
             if not hasattr(user, 'institution_profile'):
@@ -192,20 +188,20 @@ class LinkListSerializer(serializers.Serializer):
 
     def get_other_party_id(self, obj):
         user = self.context.get('target_user', self.context.get('request').user)
-        
+
         # Se o user é o Elder do link, o "other" é o profissional/cuidador/etc
         if hasattr(obj, 'elder') and obj.elder.user == user:
             if isinstance(obj, CaregiverElderLink):
-                return obj.caregiver.id
+                return obj.caregiver.user.id
             elif isinstance(obj, GuardianElderLink):
-                return obj.guardian.id
+                return obj.guardian.user.id
             elif isinstance(obj, ProfessionalElderLink):
-                return obj.professional.id
+                return obj.professional.user.id
             elif isinstance(obj, InstitutionElderLink):
-                return obj.institution.id
-        
+                return obj.institution.user.id
+
         # Se não, o "other" é o Elder
         if hasattr(obj, 'elder'):
-             return obj.elder.id
-             
+             return obj.elder.user.id
+
         return None
