@@ -40,6 +40,8 @@ class Post(models.Model):
         related_name="reposts",
     )
 
+    tags = models.JSONField(default=list, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     published_at = models.DateTimeField(null=True, blank=True)

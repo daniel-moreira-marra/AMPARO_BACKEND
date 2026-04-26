@@ -14,19 +14,32 @@ class BaseErrorResponseSerializer(serializers.Serializer):
     request_id = serializers.UUIDField(required=False, help_text="ID da requisição para rastreamento.")
 
 
+# Cache to avoid generating duplicate class objects for the same serializer,
+# which would cause drf-spectacular name-collision warnings.
+_success_response_cache: dict = {}
+
+
 def get_success_response_serializer(data_serializer, many=False):
     """
     Gera dinamicamente um serializer para respostas de sucesso envolvidas.
-    Usa o nome do data_serializer para evitar colisões no drf-spectacular.
+    Usa cache por (serializer, many) para evitar colisões de nomes no drf-spectacular.
     """
+    cache_key = (id(data_serializer), many)
+    if cache_key in _success_response_cache:
+        return _success_response_cache[cache_key]
+
     serializer_name = data_serializer.__name__.replace("Serializer", "")
-    class_name = f"{serializer_name}SuccessResponse"
+    suffix = "ListSuccessResponse" if many else "SuccessResponse"
+    class_name = f"{serializer_name}{suffix}"
 
     class SuccessResponseSerializer(serializers.Serializer):
         success = serializers.BooleanField(default=True)
         data = data_serializer(many=many)
 
     SuccessResponseSerializer.__name__ = class_name
+    SuccessResponseSerializer.__qualname__ = class_name
+
+    _success_response_cache[cache_key] = SuccessResponseSerializer
     return SuccessResponseSerializer
 
 

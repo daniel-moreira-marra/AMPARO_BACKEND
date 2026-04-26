@@ -68,6 +68,8 @@ class ElderProfile(models.Model):
     emergency_contact_phone = models.CharField("contato de emergência - telefone", max_length=30, blank=True)
     emergency_contact_relationship = models.CharField("contato de emergência - relação", max_length=60, blank=True)
 
+    share_medical_info = models.BooleanField("compartilhar ficha médica no perfil público", default=False)
+
     is_active = models.BooleanField("ativo", default=True)
 
     created_at = models.DateTimeField("criado em", auto_now_add=True)

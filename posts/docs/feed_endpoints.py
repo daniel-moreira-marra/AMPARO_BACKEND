@@ -29,13 +29,35 @@ def schema_feed_list():
                 name="cursor",
                 type=OpenApiTypes.STR,
                 required=False,
-                description="Token do cursor para a próxima página de resultados.",
+                description="Token do cursor para a próxima página. Use o campo `next` da resposta anterior.",
             ),
             OpenApiParameter(
                 name="page",
                 type=OpenApiTypes.INT,
                 required=False,
                 description="Número da página (ativa modo de paginação tradicional).",
+            ),
+            OpenApiParameter(
+                name="q",
+                type=OpenApiTypes.STR,
+                required=False,
+                description="Busca textual no conteúdo dos posts.",
+            ),
+            OpenApiParameter(
+                name="role",
+                type=OpenApiTypes.STR,
+                required=False,
+                description=(
+                    "Filtrar posts pelo papel do autor. "
+                    "Valores: ELDER, CAREGIVER, GUARDIAN, PROFESSIONAL, INSTITUTION."
+                ),
+                enum=["ELDER", "CAREGIVER", "GUARDIAN", "PROFESSIONAL", "INSTITUTION"],
+            ),
+            OpenApiParameter(
+                name="tag",
+                type=OpenApiTypes.STR,
+                required=False,
+                description="Filtrar posts por tag (busca exata, case-insensitive).",
             ),
         ],
         responses={

@@ -45,9 +45,14 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     role = models.CharField(max_length=20, choices=UserRole.choices)
 
+    show_email = models.BooleanField("compartilhar e-mail", default=False)
+    show_phone = models.BooleanField("compartilhar telefone", default=False)
+    show_links = models.BooleanField("compartilhar vínculos", default=True)
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    onboarding_completed = models.BooleanField("onboarding completo", default=False)
 
     objects = UserManager()
 

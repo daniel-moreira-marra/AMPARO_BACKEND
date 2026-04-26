@@ -3,6 +3,7 @@ from rest_framework.pagination import CursorPagination
 
 class FeedCursorPagination(CursorPagination):
     page_size = 20
-    # Usar created_at pois published_at pode ser NULL, o que causa erro no CursorPagination
-    ordering = "-created_at"
+    # published_at is always set for PUBLISHED posts (feed selector filters by status=PUBLISHED)
+    # Use id as tiebreaker since it is unique and monotonically increasing
+    ordering = ("-published_at", "-id")
     cursor_query_param = "cursor"

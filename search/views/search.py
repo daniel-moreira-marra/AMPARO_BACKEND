@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from accounts.models import User
 from core.exceptions.responses import success_response, error_response
-from core.pagination.feed_cursor_pagination import FeedCursorPagination
+from core.pagination import SearchPagination
 
 from ..serializers import (
     ElderSearchSerializer,
@@ -144,6 +144,36 @@ _ROLE_Q_BUILDERS = {
 }
 
 
+_ROLE_ATTR = {
+    "ELDER":        ("elder_profile",        ElderSearchSerializer),
+    "GUARDIAN":     ("guardian_profile",     GuardianSearchSerializer),
+    "CAREGIVER":    ("caregiver_profile",    CaregiverSearchSerializer),
+    "PROFESSIONAL": ("professional_profile", ProfessionalSearchSerializer),
+    "INSTITUTION":  ("institution_profile",  InstitutionSearchSerializer),
+}
+
+
+def _fallback_user_data(user) -> dict:
+    """Minimal card data for users whose role profile hasn't been created yet."""
+    return {
+        "id": None,
+        "user_id": user.id,
+        "role": user.role,
+        "full_name": user.full_name,
+        "city": user.city,
+        "state": user.state,
+    }
+
+
+def _serialize_for_role(user) -> dict:
+    config = _ROLE_ATTR.get(user.role)
+    if not config:
+        return _fallback_user_data(user)
+    attr, serializer_class = config
+    profile = getattr(user, attr, None)
+    return serializer_class(profile).data if profile else _fallback_user_data(user)
+
+
 class SearchView(APIView):
     """
     GET /api/v1/search – Busca de contas por tipo e/ou texto livre.
@@ -153,10 +183,10 @@ class SearchView(APIView):
                               Aceita: ELDER, GUARDIAN, CAREGIVER, PROFESSIONAL, INSTITUTION.
         q    (str, opcional): Texto a pesquisar em campos relevantes ao tipo.
 
-    Retorna resultados paginados usando cursor pagination.
+    Retorna resultados paginados (limit-offset, default 100).
     """
-    
-    pagination_class = FeedCursorPagination
+
+    pagination_class = SearchPagination
 
     @search_get_docs()
     def get(self, request):
@@ -178,10 +208,18 @@ class SearchView(APIView):
         if role:
             base_query &= _ROLE_Q_BUILDERS[role](q, request.query_params)
         else:
-            combined_roles_q = Q()
-            for r, builder in _ROLE_Q_BUILDERS.items():
-                combined_roles_q |= builder(q, request.query_params)
-            base_query &= combined_roles_q
+            # Explicit role whitelist — avoids empty-Q OR ambiguity
+            base_query &= Q(role__in=VALID_ROLES)
+            if q:
+                base_query &= (
+                    Q(full_name__icontains=q)
+                    | Q(elder_profile__preferred_name__icontains=q)
+                    | Q(caregiver_profile__bio__icontains=q)
+                    | Q(professional_profile__bio__icontains=q)
+                    | Q(professional_profile__profession__icontains=q)
+                    | Q(institution_profile__legal_name__icontains=q)
+                    | Q(institution_profile__trade_name__icontains=q)
+                )
 
         users_qs = User.objects.filter(base_query).select_related(
             "elder_profile",
@@ -189,7 +227,7 @@ class SearchView(APIView):
             "caregiver_profile",
             "professional_profile",
             "institution_profile",
-        ).order_by("-created_at")
+        ).distinct().order_by("full_name")
 
         paginator = self.pagination_class()
         paginated_users = paginator.paginate_queryset(users_qs, request, view=self)
@@ -197,16 +235,7 @@ class SearchView(APIView):
         results = []
         if paginated_users is not None:
             for user in paginated_users:
-                if user.role == "ELDER" and hasattr(user, "elder_profile"):
-                    results.append(ElderSearchSerializer(user.elder_profile).data)
-                elif user.role == "GUARDIAN" and hasattr(user, "guardian_profile"):
-                    results.append(GuardianSearchSerializer(user.guardian_profile).data)
-                elif user.role == "CAREGIVER" and hasattr(user, "caregiver_profile"):
-                    results.append(CaregiverSearchSerializer(user.caregiver_profile).data)
-                elif user.role == "PROFESSIONAL" and hasattr(user, "professional_profile"):
-                    results.append(ProfessionalSearchSerializer(user.professional_profile).data)
-                elif user.role == "INSTITUTION" and hasattr(user, "institution_profile"):
-                    results.append(InstitutionSearchSerializer(user.institution_profile).data)
+                results.append(_serialize_for_role(user))
 
         data = {
             "next": paginator.get_next_link(),

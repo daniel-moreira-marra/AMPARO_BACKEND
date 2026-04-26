@@ -12,6 +12,7 @@ class GuardianElderLink(models.Model):
     class Status(models.TextChoices):
         PENDING = "PENDING", "Pendente"
         ACTIVE = "ACTIVE", "Ativo"
+        ENDED = "ENDED", "Finalizado"
         CANCELLED = "CANCELLED", "Cancelado"
 
     guardian = models.ForeignKey(

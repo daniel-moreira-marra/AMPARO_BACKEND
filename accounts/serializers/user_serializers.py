@@ -9,9 +9,13 @@ class UpdateMeSerializer(serializers.ModelSerializer):
     zip_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
     avatar = serializers.ImageField(required=False, allow_null=True)
 
+    show_email = serializers.BooleanField(required=False)
+    show_phone = serializers.BooleanField(required=False)
+    show_links = serializers.BooleanField(required=False)
+
     class Meta:
         model = User
-        fields = ("full_name", "phone", "address_line", "city", "state", "zip_code", "avatar")
+        fields = ("full_name", "phone", "address_line", "city", "state", "zip_code", "avatar", "show_email", "show_phone", "show_links")
 
 
 class ChangePasswordSerializer(serializers.Serializer):

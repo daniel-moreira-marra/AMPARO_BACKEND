@@ -27,6 +27,12 @@ class PostListSerializer(serializers.ModelSerializer):
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
+    tags = serializers.ListField(
+        child=serializers.CharField(max_length=30),
+        required=False,
+        default=list,
+    )
+
     class Meta:
         model = Post
         fields = (
@@ -37,6 +43,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
             "status",
             "visibility_scope",
             "parent_post",
+            "tags",
         )
         read_only_fields = ("id",)
 

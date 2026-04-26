@@ -79,11 +79,14 @@ class MyPostsViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        
+
+        images = request.FILES.getlist("images")
+
         # Use Service Layer
         post = create_post(
             actor=request.user,
             data=serializer.validated_data,
+            images=images or None,
             ip_address=request.META.get("REMOTE_ADDR"),
             user_agent=request.META.get("HTTP_USER_AGENT"),
         )

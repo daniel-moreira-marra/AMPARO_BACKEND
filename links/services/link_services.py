@@ -5,18 +5,48 @@ from typing import Dict, Any
 
 from core.exceptions import domain as domain_exceptions
 from accounts.models import (
-    ElderProfile, 
+    ElderProfile,
     CaregiverProfile,
     ProfessionalProfile,
     GuardianProfile,
-    InstitutionProfile
+    InstitutionProfile,
+    Notification,
 )
 from links.models import (
-    CaregiverElderLink, 
+    CaregiverElderLink,
     ProfessionalElderLink,
     GuardianElderLink,
     InstitutionElderLink
 )
+
+LINK_TYPE_LABELS = {
+    "caregiver": "cuidador",
+    "guardian": "responsável",
+    "professional": "profissional de saúde",
+    "institution": "instituição",
+}
+
+
+def _notify_link_request(elder_user, actor_name: str, link_type: str, link_id: int):
+    Notification.objects.create(
+        recipient=elder_user,
+        type=Notification.LINK_REQUEST,
+        message=f"{actor_name} solicitou um vínculo com você.",
+        actor_name=actor_name,
+        link_type=link_type,
+        link_id=link_id,
+    )
+
+
+def _notify_link_accepted(requestor_user, elder_name: str, link_type: str, link_id: int):
+    Notification.objects.create(
+        recipient=requestor_user,
+        type=Notification.LINK_ACCEPTED,
+        message=f"{elder_name} aceitou seu vínculo.",
+        actor_name=elder_name,
+        link_type=link_type,
+        link_id=link_id,
+    )
 
 # --- Caregiver Link Services ---
 
@@ -39,13 +69,15 @@ def create_caregiver_link(*, caregiver: CaregiverProfile, elder: ElderProfile, *
     data.pop("status", None)
     data.pop("is_active", None)
 
-    return CaregiverElderLink.objects.create(
+    link = CaregiverElderLink.objects.create(
         caregiver=caregiver,
         elder=elder,
         status=CaregiverElderLink.Status.PENDING,
         is_active=True,
         **data
     )
+    _notify_link_request(elder.user, caregiver.user.full_name, "caregiver", link.id)
+    return link
 
 @transaction.atomic
 def respond_to_caregiver_link(*, link_id: int, user: Any, action: str) -> CaregiverElderLink:
@@ -84,6 +116,10 @@ def respond_to_caregiver_link(*, link_id: int, user: Any, action: str) -> Caregi
         raise domain_exceptions.ValidationError(f"Ação inválida: {action}", code="invalid_action")
 
     link.save(update_fields=["status", "is_active", "updated_at"])
+
+    if action == "approve":
+        _notify_link_accepted(link.caregiver.user, link.elder.user.full_name, "caregiver", link.id)
+
     return link
 
 
@@ -106,13 +142,15 @@ def create_professional_link(*, professional: ProfessionalProfile, elder: ElderP
     data.pop("status", None)
     data.pop("is_active", None)
 
-    return ProfessionalElderLink.objects.create(
+    link = ProfessionalElderLink.objects.create(
         professional=professional,
         elder=elder,
         status=ProfessionalElderLink.Status.PENDING,
         is_active=True,
         **data
     )
+    _notify_link_request(elder.user, professional.user.full_name, "professional", link.id)
+    return link
 
 @transaction.atomic
 def respond_to_professional_link(*, link_id: int, user: Any, action: str) -> ProfessionalElderLink:
@@ -159,6 +197,10 @@ def respond_to_professional_link(*, link_id: int, user: Any, action: str) -> Pro
         link.is_active = False
 
     link.save(update_fields=["status", "is_active", "updated_at"])
+
+    if action == "approve":
+        _notify_link_accepted(link.professional.user, link.elder.user.full_name, "professional", link.id)
+
     return link
 
 
@@ -181,13 +223,15 @@ def create_guardian_link(*, guardian: GuardianProfile, elder: ElderProfile, **da
     data.pop("status", None)
     data.pop("is_active", None)
 
-    return GuardianElderLink.objects.create(
+    link = GuardianElderLink.objects.create(
         guardian=guardian,
         elder=elder,
         status=GuardianElderLink.Status.PENDING,
         is_active=True,
         **data
     )
+    _notify_link_request(elder.user, guardian.user.full_name, "guardian", link.id)
+    return link
 
 @transaction.atomic
 def respond_to_guardian_link(*, link_id: int, user: Any, action: str) -> GuardianElderLink:
@@ -219,6 +263,10 @@ def respond_to_guardian_link(*, link_id: int, user: Any, action: str) -> Guardia
         raise domain_exceptions.ValidationError(f"Ação inválida: {action}", code="invalid_action")
 
     link.save(update_fields=["status", "is_active", "updated_at"])
+
+    if action == "approve":
+        _notify_link_accepted(link.guardian.user, link.elder.user.full_name, "guardian", link.id)
+
     return link
 
 
@@ -241,13 +289,15 @@ def create_institution_link(*, institution: InstitutionProfile, elder: ElderProf
     data.pop("status", None)
     data.pop("is_active", None)
 
-    return InstitutionElderLink.objects.create(
+    link = InstitutionElderLink.objects.create(
         institution=institution,
         elder=elder,
         status=InstitutionElderLink.Status.PENDING,
         is_active=True,
         **data
     )
+    _notify_link_request(elder.user, institution.user.full_name, "institution", link.id)
+    return link
 
 @transaction.atomic
 def respond_to_institution_link(*, link_id: int, user: Any, action: str) -> InstitutionElderLink:
@@ -282,4 +332,8 @@ def respond_to_institution_link(*, link_id: int, user: Any, action: str) -> Inst
         raise domain_exceptions.ValidationError(f"Ação inválida: {action}", code="invalid_action")
 
     link.save(update_fields=["status", "is_active", "updated_at"])
+
+    if action == "approve":
+        _notify_link_accepted(link.institution.user, link.elder.user.full_name, "institution", link.id)
+
     return link

@@ -262,3 +262,46 @@ class LinkViewSet(viewsets.GenericViewSet):
              return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        summary="Encerrar um vínculo ativo",
+        description="Encerra um vínculo ativo. Qualquer uma das partes envolvidas pode encerrar.",
+    )
+    @action(detail=False, methods=['post'], url_path='end')
+    def end(self, request):
+        link_type = request.data.get('link_type')
+        link_id = request.data.get('link_id')
+
+        MODEL_MAP = {
+            'caregiver': CaregiverElderLink,
+            'guardian': GuardianElderLink,
+            'professional': ProfessionalElderLink,
+            'institution': InstitutionElderLink,
+        }
+
+        model = MODEL_MAP.get(link_type)
+        if not model:
+            return Response({"error": _("Tipo de vínculo inválido.")}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            link = model.objects.get(id=link_id, status='ACTIVE')
+        except model.DoesNotExist:
+            return Response({"error": _("Vínculo ativo não encontrado.")}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+        is_elder = hasattr(user, 'elder_profile') and link.elder.user == user
+        is_other = (
+            (link_type == 'caregiver' and hasattr(user, 'caregiver_profile') and link.caregiver.user == user) or
+            (link_type == 'guardian' and hasattr(user, 'guardian_profile') and link.guardian.user == user) or
+            (link_type == 'professional' and hasattr(user, 'professional_profile') and link.professional.user == user) or
+            (link_type == 'institution' and hasattr(user, 'institution_profile') and link.institution.user == user)
+        )
+
+        if not (is_elder or is_other):
+            return Response({"error": _("Sem permissão para encerrar este vínculo.")}, status=status.HTTP_403_FORBIDDEN)
+
+        link.status = 'ENDED'
+        link.is_active = False
+        link.save(update_fields=['status', 'is_active'])
+
+        return Response({"status": "success", "message": _("Vínculo encerrado.")}, status=status.HTTP_200_OK)

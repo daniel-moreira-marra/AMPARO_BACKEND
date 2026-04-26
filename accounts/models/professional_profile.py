@@ -23,6 +23,7 @@ class ProfessionalProfile(models.Model):
     )
 
     profession = models.CharField("profissão", max_length=30, choices=Profession.choices)
+    profession_other = models.CharField("especialidade (outro)", max_length=100, blank=True)
     council = models.CharField(
         "conselho profissional",
         max_length=20,

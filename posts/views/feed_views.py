@@ -20,7 +20,10 @@ class FeedListView(FeedPaginationMixin, generics.ListAPIView):
     pagination_class = None
 
     def get_queryset(self):
-        return get_feed_queryset(user=self.request.user)
+        q = self.request.query_params.get("q", "")
+        role_filter = self.request.query_params.get("role", "")
+        tag = self.request.query_params.get("tag", "")
+        return get_feed_queryset(user=self.request.user, q=q, role_filter=role_filter, tag=tag)
 
     def paginate_queryset(self, queryset):
         # Se o mixin não existir/ não fornecer o método, cai pro padrão do DRF
@@ -48,10 +51,12 @@ class FeedListView(FeedPaginationMixin, generics.ListAPIView):
         return self.list(request, *args, **kwargs)
 
     def list(self, request, *args, **kwargs):
-        # 1. Obter parâmetros para a chave
         cursor = request.query_params.get("cursor")
-        # Se houver filtros no futuro, eles devem entrar aqui
-        extra_params = {} 
+        extra_params = {
+            "q": request.query_params.get("q", ""),
+            "role": request.query_params.get("role", ""),
+            "tag": request.query_params.get("tag", ""),
+        }
 
         # 2. Gerar chave de cache
         cache_key = generate_feed_cache_key(request.user, cursor, extra_params)

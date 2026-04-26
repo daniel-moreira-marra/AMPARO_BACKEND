@@ -1,14 +1,13 @@
-from django.db.models import QuerySet, Exists, OuterRef
+from django.db.models import Q, QuerySet, Exists, OuterRef
 from ..models import Post, PostLike
 from ..enums.post_status import PostStatus
 from ..enums.visibility_scope import VisibilityScope
 from accounts.enums import UserRole
 
 
-def get_feed_queryset(*, user) -> QuerySet[Post]:
+def get_feed_queryset(*, user, q: str = "", role_filter: str = "", tag: str = "") -> QuerySet[Post]:
     """
-    Retorna o queryset do feed geral.
-    Centralizar aqui evita duplicar regras de visibilidade em vários lugares.
+    Retorna o queryset do feed geral com suporte a filtros opcionais.
     """
     qs = Post.objects.filter(status=PostStatus.PUBLISHED)
 
@@ -17,16 +16,16 @@ def get_feed_queryset(*, user) -> QuerySet[Post]:
 
     allowed_scopes = [VisibilityScope.PUBLIC]
 
-    role = getattr(user, "role", None)
-    if role == UserRole.CAREGIVER:
+    user_role = getattr(user, "role", None)
+    if user_role == UserRole.CAREGIVER:
         allowed_scopes.append(VisibilityScope.CAREGIVERS)
-    elif role == UserRole.ELDER:
+    elif user_role == UserRole.ELDER:
         allowed_scopes.append(VisibilityScope.ELDERS)
-    elif role == UserRole.GUARDIAN:
+    elif user_role == UserRole.GUARDIAN:
         allowed_scopes.append(VisibilityScope.GUARDIANS)
-    elif role == UserRole.INSTITUTION:
+    elif user_role == UserRole.INSTITUTION:
         allowed_scopes.append(VisibilityScope.INSTITUTIONS)
-    elif role == UserRole.PROFESSIONAL:
+    elif user_role == UserRole.PROFESSIONAL:
         allowed_scopes.append(VisibilityScope.PROFESSIONALS)
 
     if user is None or not getattr(user, "is_authenticated", False):
@@ -34,10 +33,18 @@ def get_feed_queryset(*, user) -> QuerySet[Post]:
 
     qs = qs.filter(visibility_scope__in=allowed_scopes)
 
-    # Evitar N+1 ao serializar author, parent_post e author do parent_post
-    qs = qs.select_related("author", "parent_post", "parent_post__author")
+    if q:
+        qs = qs.filter(Q(text__icontains=q) | Q(author__full_name__icontains=q))
 
-    # Anotar liked_by_me para usuários autenticados (evita N+1 por post)
+    if role_filter:
+        qs = qs.filter(author_role=role_filter.upper())
+
+    if tag:
+        qs = qs.filter(tags__icontains=tag.lower())
+
+    qs = qs.select_related("author", "parent_post", "parent_post__author")
+    qs = qs.prefetch_related("post_images", "parent_post__post_images")
+
     if user and getattr(user, "is_authenticated", False):
         qs = qs.annotate(
             _liked_by_me=Exists(

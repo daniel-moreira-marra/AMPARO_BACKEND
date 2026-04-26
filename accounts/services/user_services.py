@@ -83,6 +83,9 @@ def update_user_profile(*, user: User, data: Dict[str, Any]) -> User:
     zip_code = normalized_contact_address.get("zip_code")
 
     avatar = data.get("avatar")
+    show_email = data.get("show_email")
+    show_phone = data.get("show_phone")
+    show_links = data.get("show_links")
 
     if full_name is not None:
         user.full_name = full_name
@@ -98,6 +101,12 @@ def update_user_profile(*, user: User, data: Dict[str, Any]) -> User:
         user.zip_code = zip_code
     if avatar is not None:
         user.avatar = avatar
+    if show_email is not None:
+        user.show_email = show_email
+    if show_phone is not None:
+        user.show_phone = show_phone
+    if show_links is not None:
+        user.show_links = show_links
 
     user.save()
 

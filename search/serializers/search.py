@@ -100,6 +100,7 @@ class ProfessionalSearchSerializer(serializers.ModelSerializer):
             "full_name",
             "profession",
             "profession_display",
+            "profession_other",
             "bio",
             "service_mode",
             "hourly_rate",

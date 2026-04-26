@@ -7,3 +7,4 @@ from .guardian_profile import GuardianProfile
 from .institution_profile import InstitutionProfile
 from .professional_profile import ProfessionalProfile
 from .caregiver_care_type import CaregiverCareType
+from .notification import Notification

@@ -11,6 +11,7 @@ class ProfessionalMeSerializer(serializers.ModelSerializer):
         model = ProfessionalProfile
         fields = (
             "profession",
+            "profession_other",
             "council",
             "license_number",
             "bio",

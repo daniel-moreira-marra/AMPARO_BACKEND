@@ -24,5 +24,6 @@ class ElderMeSerializer(serializers.ModelSerializer):
             "emergency_contact_name",
             "emergency_contact_phone",
             "emergency_contact_relationship",
+            "share_medical_info",
             "is_active",
         )

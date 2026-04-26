@@ -6,14 +6,22 @@ from .caregiver_me import CaregiverMeView
 from .guardian_me import GuardianMeView
 from .professional_me import ProfessionalMeView
 from .institution_me import InstitutionMeView
+from .complete_onboarding import CompleteOnboardingView
+from .elder_medical_record import ElderMedicalRecordView
+from .notifications import NotificationListView, MarkNotificationReadView, MarkAllNotificationsReadView
 
 __all__ = [
-    "MeView", 
-    "TokenByEmailView", 
-    "SignupView", 
-    "ElderMeView", 
-    "CaregiverMeView", 
+    "MeView",
+    "TokenByEmailView",
+    "SignupView",
+    "ElderMeView",
+    "CaregiverMeView",
     "GuardianMeView",
     "ProfessionalMeView",
     "InstitutionMeView",
+    "CompleteOnboardingView",
+    "ElderMedicalRecordView",
+    "NotificationListView",
+    "MarkNotificationReadView",
+    "MarkAllNotificationsReadView",
 ]

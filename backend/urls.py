@@ -40,6 +40,7 @@ urlpatterns = [
     path("api/v1/", include("links.urls")),
     path("api/v1/", include("search.urls")),
     path("api/v1/accounts/users/", include("accounts.urls.urls_public_users")),
+    path("api/v1/notifications/", include("accounts.urls.urls_notifications")),
 
     # path("api/v1/posts/", include("posts.urls.urls_posts")),
     path("api/v1/posts/", include("posts.urls.urls_my_posts")),

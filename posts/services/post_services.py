@@ -9,11 +9,14 @@ from posts.enums.visibility_scope import VisibilityScope
 from accounts.models import User
 from core.cache import bump_feed_version
 
+MAX_POST_IMAGES = 5
+
 @transaction.atomic
 def create_post(
     *,
     actor: User,
     data: Dict[str, Any],
+    images: list = None,
     ip_address: Optional[str] = None,
     user_agent: Optional[str] = None
 ) -> Post:
@@ -35,6 +38,7 @@ def create_post(
     parent_post = data.get("parent_post")
     image = data.get("image")
     image_alt_text = data.get("image_alt_text", "")
+    tags = [t.strip().lower() for t in data.get("tags", []) if t.strip()][:5]
 
     if parent_post and parent_post.deleted_at:
         raise domain_exceptions.ValidationError("Cannot reply to a deleted post.", code="inactive_parent")
@@ -46,10 +50,15 @@ def create_post(
         image_alt_text=image_alt_text,
         visibility_scope=visibility_scope,
         parent_post=parent_post,
+        tags=tags,
         published_at=timezone.now(),
-        # Other fields like author_role could be derived here
-        author_role=getattr(actor, "role", "user") 
+        author_role=getattr(actor, "role", "user"),
     )
+
+    if images:
+        from posts.models.post_image import PostImage
+        for i, img_file in enumerate(images[:MAX_POST_IMAGES]):
+            PostImage.objects.create(post=post, image=img_file, order=i)
 
     # Dispatch event
     dispatch("post_created", post_id=post.id, actor_id=actor.id)
