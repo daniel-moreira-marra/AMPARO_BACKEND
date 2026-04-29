@@ -3,7 +3,7 @@ from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.pagination import FeedCursorPagination, FeedPagePagination
+from core.pagination import CommentCursorPagination, FeedPagePagination
 from core.exceptions.responses import success_response
 from posts.docs.post_endpoints import (
     schema_posts_comment_create,
@@ -32,7 +32,7 @@ class PostCommentListCreateView(APIView):
     def _get_paginator(self, request):
         if "page" in request.query_params:
             return FeedPagePagination()
-        return FeedCursorPagination()
+        return CommentCursorPagination()
 
     @schema_posts_comment_list()
     def get(self, request, post_id: int, *args, **kwargs):
