@@ -210,6 +210,20 @@ class SearchView(APIView):
         else:
             # Explicit role whitelist — avoids empty-Q OR ambiguity
             base_query &= Q(role__in=VALID_ROLES)
+            city = request.query_params.get("city", "").strip()
+            if city:
+                base_query &= (
+                    Q(city__icontains=city)
+                    | Q(caregiver_profile__city__icontains=city)
+                    | Q(professional_profile__city__icontains=city)
+                )
+            state = request.query_params.get("state", "").strip()
+            if state:
+                base_query &= (
+                    Q(state__iexact=state)
+                    | Q(caregiver_profile__state__iexact=state)
+                    | Q(professional_profile__state__iexact=state)
+                )
             if q:
                 base_query &= (
                     Q(full_name__icontains=q)

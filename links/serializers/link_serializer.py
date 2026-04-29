@@ -209,17 +209,17 @@ class LinkListSerializer(serializers.Serializer):
         # Se o user é o Elder do link, o "other" é o profissional/cuidador/etc
         if hasattr(obj, 'elder') and obj.elder.user == user:
             if isinstance(obj, CaregiverElderLink):
-                return obj.caregiver.user.id
+                return obj.caregiver.id
             elif isinstance(obj, GuardianElderLink):
-                return obj.guardian.user.id
+                return obj.guardian.id
             elif isinstance(obj, ProfessionalElderLink):
-                return obj.professional.user.id
+                return obj.professional.id
             elif isinstance(obj, InstitutionElderLink):
-                return obj.institution.user.id
+                return obj.institution.id
 
         # Se não, o "other" é o Elder
         if hasattr(obj, 'elder'):
-             return obj.elder.user.id
+            return obj.elder.id
 
         return None
 

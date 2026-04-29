@@ -34,8 +34,13 @@ def create_post(
         raise domain_exceptions.ValidationError("Post text is required.", code="missing_text")
 
     visibility_scope = data.get("visibility_scope", VisibilityScope.PUBLIC)
-    # DRF passes a Post instance for ForeignKey fields, not an ID
+    # DRF passes a Post instance for ForeignKey fields; direct callers may pass an ID
     parent_post = data.get("parent_post")
+    if parent_post is None and data.get("parent_post_id"):
+        try:
+            parent_post = Post.objects.get(id=data["parent_post_id"])
+        except Post.DoesNotExist:
+            raise domain_exceptions.NotFoundError(f"Parent post {data['parent_post_id']} not found.")
     image = data.get("image")
     image_alt_text = data.get("image_alt_text", "")
     tags = [t.strip().lower() for t in data.get("tags", []) if t.strip()][:5]
