@@ -155,3 +155,22 @@ def reset_password_with_token(*, uid: str, token: str, new_password: str) -> Non
     user.save()
     
     dispatch("user_password_changed", user_id=user.id)
+
+@transaction.atomic
+def verify_user_email(*, uid: str, token: str) -> None:
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_id)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        raise domain_exceptions.ValidationError("Link inválido ou corrompido.", code="invalid_uid")
+
+    # Verifica se o token matemático bate com o usuário
+    if not default_token_generator.check_token(user, token):
+        raise domain_exceptions.ValidationError("Link expirado ou token inválido.", code="invalid_token")
+
+    # Se chegou aqui, é sucesso! Ativa a conta do usuário
+    user.is_verified = True
+    user.save()
+    
+    # Opcional: se quiser disparar um evento de boas-vindas
+    dispatch("user_profile_updated", user_id=user.id)

@@ -1,4 +1,5 @@
 from django.urls import path
+from .views.verify_email import VerifyEmailView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from ..views import (
     TokenByEmailView, 
@@ -23,4 +24,5 @@ urlpatterns = [
     path("caregiver/me/", CaregiverMeView.as_view(), name="caregiver-me"),
     path("professional/me/", ProfessionalMeView.as_view(), name="professional-me"),
     path("institution/me/", InstitutionMeView.as_view(), name="institution-me"),
+    path("verify-email/", VerifyEmailView.as_view(), name="verify-email"),
 ]
