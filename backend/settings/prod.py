@@ -18,9 +18,6 @@ CSRF_TRUSTED_ORIGINS = [
     for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
 ]
 
-# Se não houver nada configurado e estivermos em prod, vamos garantir o ALB pelo menos
-# Se for "*", o Django pode reclamar em algumas versões de CSRF, mas vamos seguir o .env do usuário
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -52,3 +49,10 @@ STORAGES = {
 
 # HARDENING: Desativa Swagger em produção por padrão
 ENABLE_SWAGGER = os.getenv("ENABLE_SWAGGER", "False").lower() == "true"
+
+# --- CONFIGURAÇÃO ADICIONADA: Autenticação JWT ---
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}

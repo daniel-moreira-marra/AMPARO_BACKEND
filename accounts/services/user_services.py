@@ -1,5 +1,8 @@
 from django.db import transaction
 from django.contrib.auth import get_user_model, password_validation
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from typing import Dict, Any
 
 from core.exceptions import domain as domain_exceptions
@@ -11,9 +14,6 @@ User = get_user_model()
 
 @transaction.atomic
 def register_user(*, data: Dict[str, Any]) -> User:
-    """
-    Service to register a new user and create their respective profile.
-    """
     email = data.get("email")
     password = data.get("password")
     full_name = data.get("full_name")
@@ -31,7 +31,6 @@ def register_user(*, data: Dict[str, Any]) -> User:
     if User.objects.filter(email=email).exists():
         raise domain_exceptions.ValidationError("Email already in use.", code="email_exists")
 
-    # Validate password using Django's built-in validators
     try:
         password_validation.validate_password(password)
     except Exception as e:
@@ -49,7 +48,6 @@ def register_user(*, data: Dict[str, Any]) -> User:
         zip_code=zip_code,
     )
 
-    # Create profile based on role
     if role == "ELDER":
         ElderProfile.objects.create(user=user)
     elif role == "CAREGIVER":
@@ -67,12 +65,8 @@ def register_user(*, data: Dict[str, Any]) -> User:
 
     return user
 
-
 @transaction.atomic
 def update_user_profile(*, user: User, data: Dict[str, Any]) -> User:
-    """
-    Service to update basic user profile information.
-    """
     full_name = data.get("full_name")
     normalized_contact_address = normalize_user_contact_address(data, partial=True)
 
@@ -109,17 +103,11 @@ def update_user_profile(*, user: User, data: Dict[str, Any]) -> User:
         user.show_links = show_links
 
     user.save()
-
     dispatch("user_profile_updated", user_id=user.id)
-
     return user
-
 
 @transaction.atomic
 def change_user_password(*, user: User, data: Dict[str, Any]) -> None:
-    """
-    Service to change a user's password.
-    """
     old_password = data.get("old_password")
     new_password = data.get("new_password")
 
@@ -133,5 +121,37 @@ def change_user_password(*, user: User, data: Dict[str, Any]) -> None:
 
     user.set_password(new_password)
     user.save()
+    dispatch("user_password_changed", user_id=user.id)
 
+# --- FUNÇÕES ADICIONADAS PARA O FLUXO DE "ESQUECI A SENHA" ---
+
+@transaction.atomic
+def request_password_reset(*, email: str) -> None:
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Segurança: retornar silenciosamente se o e-mail não existir
+        return
+    
+    dispatch("password_reset_requested", user_id=user.id, email=user.email)
+
+@transaction.atomic
+def reset_password_with_token(*, uid: str, token: str, new_password: str) -> None:
+    try:
+        user_id = force_str(urlsafe_base64_decode(uid))
+        user = User.objects.get(pk=user_id)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        raise domain_exceptions.ValidationError("Link inválido ou corrompido.", code="invalid_uid")
+
+    if not default_token_generator.check_token(user, token):
+        raise domain_exceptions.ValidationError("Link expirado ou token inválido.", code="invalid_token")
+
+    try:
+        password_validation.validate_password(new_password, user=user)
+    except Exception as e:
+        raise domain_exceptions.ValidationError(str(e), code="invalid_password")
+
+    user.set_password(new_password)
+    user.save()
+    
     dispatch("user_password_changed", user_id=user.id)
