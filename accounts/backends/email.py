@@ -3,7 +3,6 @@ from django.contrib.auth.backends import ModelBackend
 
 User = get_user_model()
 
-
 class EmailBackend(ModelBackend):
     """
     Autentica usando email + password.
