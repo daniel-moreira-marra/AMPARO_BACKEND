@@ -1,5 +1,5 @@
 from django.urls import path
-from .views.verify_email import VerifyEmailView
+from ..views.verify_email import VerifyEmailView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from ..views import (
     TokenByEmailView, 
