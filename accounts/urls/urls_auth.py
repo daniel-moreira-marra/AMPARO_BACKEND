@@ -1,6 +1,11 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
 from ..views import TokenByEmailView, SignupView, MeView, CompleteOnboardingView
+from ..views.verify_email import (
+    VerifyEmailView, 
+    PasswordResetRequestView, 
+    PasswordResetConfirmView
+)
 from ..views.password import ChangePasswordView
 
 urlpatterns = [
